@@ -12,13 +12,9 @@ import java.util.UUID
 data class WallpaperItem(val id: String, val title: String, val collection: String, val uri: String, val builtIn: Boolean)
 
 object WallpaperLibrary {
-    private val builtIns = listOf(
-        Triple("Aurora.mp4", "Aurora", "Abstraktné"),
-        Triple("Ocean.mp4", "Ocean", "Abstraktné"),
-        Triple("Ember.mp4", "Ember", "Abstraktné"),
-    )
+    private val builtIns get()=EditionConfig.wallpapers
     fun folder(context: Context) = File(context.getExternalFilesDir(null), "wallpapers").apply { mkdirs() }
-    val collections = listOf("Všetky", "Abstraktné", "Príroda", "Filmy", "Hry", "Animácia", "Vlastné")
+    val collections get()=EditionConfig.collections
     fun all(context: Context): List<WallpaperItem> {
         val dir = folder(context)
         // Optional metadata never controls paths; discover only actual files in our own folder.

@@ -35,6 +35,9 @@ for name in ['THIRD-PARTY-NOTICES.md','PRIVACY.md','SERVICES.md','MEDIA-LICENSE.
  if (r/name).read_bytes()!=(legal/name).read_bytes():errors.append('Stale APK legal notice: '+name)
 if json.loads((r/'android/app/src/main/assets/photo-notes.json').read_text())!={}:errors.append('Photo notes must be empty')
 if json.loads((r/'android/app/src/main/assets/aerials.json').read_text())!=[]:errors.append('Remote aerial catalog must be empty')
+edition=json.loads((r/'android/app/src/main/assets/edition.json').read_text())
+if edition.get('newsSources') or edition.get('premiereSources'):errors.append('Public source presets must be empty')
+if {x['file'] for x in edition['wallpapers']}!={'Aurora.mp4','Ocean.mp4','Ember.mp4'}:errors.append('Unexpected public wallpaper profile')
 if a.apk:
  with zipfile.ZipFile(a.apk) as z:
   expected={n.removeprefix('android/app/src/main/') for n in manifest if '/assets/' in n}

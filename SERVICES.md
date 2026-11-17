@@ -6,17 +6,31 @@ third-party rights clearance is guaranteed by the application's GPL license.
 
 ## TVmaze
 
-Only documented https://api.tvmaze.com endpoints are used. Data are licensed
-under CC BY-SA 4.0: https://www.tvmaze.com/api#licensing . The panel credits
-TVmaze, links to that license page and each show's source. Transformed or
-redistributed TVmaze data remain subject to attribution and ShareAlike; this
-does not impose CC BY-SA on the independent application code.
+All release sources are disabled in the public edition until selected in **New releases → Sources**.
 
-The application loads CDN image links at runtime as documented by TVmaze;
-no movie/TV posters or API responses are shipped in the repository or APK.
-Schedule coverage is explicitly US-oriented and limited to a seven-day window;
-it does not promise a complete cinema or streaming catalog. Requests are bounded,
-paced and cached for six hours. Publisher cinema HTML scrapers are excluded.
+The optional TVmaze API adapter uses documented https://api.tvmaze.com endpoints.
+API data are CC BY-SA 4.0: https://www.tvmaze.com/api#licensing . Attribution,
+license and original-show links appear in the panel. Transformed/redistributed
+data retain attribution and ShareAlike obligations; the independent app code
+keeps its own license. The API adapter covers a US-oriented seven-day window,
+with six-hour caching. It is not a complete streaming or cinema catalog.
+
+## Optional web adapters
+
+The common code also includes opt-in ITAFILM/CINEMAX cinema listings and a
+TVmaze web-calendar adapter. These are independent web integrations, not
+official publisher APIs. Their inclusion does not grant permission to access,
+extract or redistribute a provider's content. Check the terms of
+https://www.itafilm.sk/ , https://www.cine-max.sk/ and https://www.tvmaze.com/
+before enabling them for your intended use; leave them disabled if permission
+is unclear. A confirmation in the app is not a substitute for those rights.
+
+Web layout changes can break adapters. Requests, cache size and result counts
+are bounded. Article/show links identify the original sources. No posters,
+publisher article snapshots or scraped responses ship in this repository or
+APK. Images are retrieved at runtime only for enabled features. A downstream
+private distribution can supply its own presets through its edition profile;
+such presets do not become defaults in this public distribution.
 
 ## Open-Meteo
 

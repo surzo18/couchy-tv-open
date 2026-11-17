@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.2.0
+
+- Optional two-minute wallpaper rotation, enabled by default; lifecycle-aware timer and single-decoder transitions.
+- Bounded video buffering, disabled wallpaper audio/text decoding and stable video surface attachment.
+
+- Shared implementation with distribution-specific media and preset profiles.
+- Optional cinema and series sources; public defaults remain empty.
+- English game menus, category labels and dynamic counts; Android-safe template parsing.
+- Guava security update and expanded instrumentation coverage.
+- Refreshed gallery with actual installed applications.
+
 ## 1.0.0 — Public edition
 
 - Fresh public repository and separate Android application ID.

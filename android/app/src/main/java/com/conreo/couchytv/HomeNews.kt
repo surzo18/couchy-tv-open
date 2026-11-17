@@ -56,7 +56,7 @@ object HomeNews {
     fun imageAllowed(url:String)=NewsSources.validUrl(url)
     fun fetch(feed:NewsSource):List<NewsItem> {
         val body=PublicFeed.get(feed.url)
-        return parse(body,feed.section,feed.source).map{it.copy(source=feed.source,section=feed.section)}
+        return when(feed.parser){"360"->NewsWebSources.threeSixty(body);"tvnoviny"->NewsWebSources.tvNoviny(body);else->parse(body,feed.section,feed.source)}.map{it.copy(source=feed.source,section=feed.section)}
     }
 
     private var sourceRevision=-1

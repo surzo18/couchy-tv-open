@@ -14,8 +14,8 @@ android {
         minSdk = 29
         targetSdk = 34
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 10
+        versionName = "1.2.0"
     }
 
     // Release signing key, supplied by CI via environment variables (from GitHub
@@ -74,6 +74,7 @@ android {
 }
 
 dependencies {
+    implementation("com.google.guava:guava:33.7.2-android") // Fix GHSA-xxph-c9ww-hj94 in Media3's transitive dependency.
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test:runner:1.6.2")
     androidTestImplementation("androidx.test.ext:junit:1.2.1")

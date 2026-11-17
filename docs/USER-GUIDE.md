@@ -35,3 +35,9 @@ Open Photo albums to import and organize media. Manage album selection for the s
 5. Report your Android version, steps and sanitized diagnostics through GitHub Issues. Never post account tokens, private server URLs, personal photos or passwords.
 
 Full details: [feature reference](FEATURES.md). Data handling: [privacy](../PRIVACY.md). License/service information is also available offline under System → Licenses and privacy.
+
+## New release sources
+Open New releases and choose Sources. All are disabled initially. Select TVmaze API for a short series schedule, or optional cinema/web sources after reviewing their conditions. Source choices persist across restarts.
+
+## Automatic wallpaper rotation
+Automatic wallpaper changes are on by default: every two minutes on the cinematic home screen, the next eligible background fades through its preview using one video decoder. Turn this off in Wallpapers to keep your selection. Menus, other apps and the screensaver pause rotation; returning starts a fresh interval. The wake preference is independent. Assigned music follows the background.

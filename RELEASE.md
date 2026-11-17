@@ -6,7 +6,7 @@ Public application ID: `io.github.surzo18.couchytv`.
 Each release provides a signed APK, `SHA256SUMS.txt`, a runtime dependency report and its exact source tag/archive. Compare the downloaded APK hash with the published checksum. To verify the Android signing certificate:
 
 ```sh
-apksigner verify --print-certs Couchy-TV-Open-1.0.0.apk
+apksigner verify --print-certs Couchy-TV-Open-1.2.0.apk
 ```
 
 Expected signer SHA-256:

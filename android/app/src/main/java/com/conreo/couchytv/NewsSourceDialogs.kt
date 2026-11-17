@@ -37,7 +37,7 @@ class NewsSourceDialogs(private val a:Activity,private val changed:()->Unit) {
         val section=field("Kategória",item?.section.orEmpty())
         val color=field("Farba #RRGGBB",String.format("#%06X",(item?.color ?: 0xFFD4DEE8.toInt()) and 0xFFFFFF))
         val enabled=CheckBox(a).apply{text=AppLanguage.text("Povolený");isChecked=item?.enabled ?: true;setTextColor(Color.WHITE);fields.addView(this)}
-        val status=TextView(a).apply{text="Použi zdroj, ktorého podmienky povoľujú čítanie v tejto aplikácii. Obsah zostáva majetkom vydavateľa.";setTextColor(Color.WHITE);fields.addView(this)}
+        val status=TextView(a).apply{text=AppLanguage.text("Použi zdroj, ktorého podmienky povoľujú čítanie v tejto aplikácii. Obsah zostáva majetkom vydavateľa.");setTextColor(Color.WHITE);fields.addView(this)}
         fun value():NewsSource {
             require(name.text.trim().isNotEmpty()){AppLanguage.text("Zadaj názov zdroja.")}
             require(NewsSources.validUrl(url.text.toString().trim())){AppLanguage.text("Zadaj platnú HTTPS adresu bez hesla.")}

@@ -203,10 +203,8 @@ object HomeMusic {
         }
         if (startupPending) {
             startupPending = false
-            val file = File(app.filesDir, "welcome.wav").also { target ->
-                if (!target.exists()) app.assets.open("game-audio/welcome.wav").use { input -> target.outputStream().use { input.copyTo(it) } }
-            }
-            if (startupEnabled && file.isFile) { playIntro(file); return }
+            val file = EditionConfig.startupFile(app)
+            if (startupEnabled && file != null && file.isFile) { playIntro(file); return }
         }
         if (!enabled) return
         if (track == null || selectedFor != wallpaper) { position = 0; selectNext() }

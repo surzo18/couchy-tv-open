@@ -117,12 +117,17 @@ class StudioActivity : LocalizedActivity() {
                 "Systém" -> PortableSettings(this@StudioActivity)
                 "Pozadia" -> {
                     var randomAtWake by remember { mutableStateOf(WallpaperCycle.randomAtWake(this@StudioActivity)) }
+                    var autoRotate by remember { mutableStateOf(WallpaperCycle.autoRotate(this@StudioActivity)) }
                     val displayed = remember(library, filter) { library.filter { filter == "Všetky" || it.collection == filter } }
                     val cardFocus = remember(displayed) { displayed.associate { it.id to FocusRequester() } }
                     val gridState = rememberLazyGridState()
                     Text("Pozadia: ${library.size} · Povolené: ${library.count { it.id !in disabled }} · V kategórii: ${displayed.size}", color = Color(0xFFBBC9DD), fontSize = 14.sp)
                     Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(vertical = 6.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         StudioButton("Náhodné pozadie") { WallpaperCycle.next(this@StudioActivity); finish() }
+                        StudioButton(if (autoRotate) "Automatická zmena: každé 2 minúty" else "Automatická zmena: vypnutá") {
+                            autoRotate = !autoRotate
+                            WallpaperCycle.setAutoRotate(this@StudioActivity, autoRotate)
+                        }
                         StudioButton("Pridať video") {
                             if (!busy) runCatching { picker.launch(arrayOf("video/*")) }.onFailure {
                                 message = "Výber súborov sa nepodarilo otvoriť."
@@ -167,7 +172,7 @@ class StudioActivity : LocalizedActivity() {
                                     Surface(
             border = tvFocusBorder(RoundedCornerShape(14.dp)),onClick = {
                                         android.app.AlertDialog.Builder(this@StudioActivity).setTitle(item.title)
-                                            .setItems(arrayOf("Použiť pozadie", if (item.id in disabled) "Zaradiť do náhodného výberu" else "Vyradiť z náhodného výberu", "Spravovať pozadie", "Zrušiť")) { _, action ->
+                                            .setItems(arrayOf("Použiť pozadie", if (item.id in disabled) "Zaradiť do náhodného výberu" else "Vyradiť z náhodného výberu", "Spravovať pozadie", "Zrušiť").map{AppLanguage.text(it)}.toTypedArray()) { _, action ->
                                                 when (action) {
                                                     0 -> { WallpaperCycle.select(this@StudioActivity, item.uri); finish() }
                                                     1 -> {
@@ -272,7 +277,7 @@ class StudioActivity : LocalizedActivity() {
                     }
                     Spacer(Modifier.height(16.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                        StudioButton(if (HomeMusic.startupEnabled) "Uvítací zvuk: Couchy" else "Uvítací zvuk: vypnutý") { HomeMusic.toggleStartup() }
+                        StudioButton(if (HomeMusic.startupEnabled) "Uvítací zvuk: ${EditionConfig.startupTitle}" else "Uvítací zvuk: vypnutý") { HomeMusic.toggleStartup() }
                         StudioButton("Vyskúšať uvítací zvuk") {
                             HomeMusic.previewStartup(); Actions.openCustomHome(this@StudioActivity); finish()
                         }
@@ -353,9 +358,9 @@ class StudioActivity : LocalizedActivity() {
             Text(address, color = Color(0xFFBBC9DD), modifier = Modifier.padding(vertical = 16.dp))
             if(!reconnect)StudioButton("Zmeniť adresu servera") {
                 val field = android.widget.EditText(this@StudioActivity).apply { setText(address); setSingleLine(true) }
-                android.app.AlertDialog.Builder(this@StudioActivity).setTitle("Adresa servera Jellyfin")
-                    .setView(field).setPositiveButton("Použiť") { _, _ -> address = field.text.toString().trim() }
-                    .setNegativeButton("Zrušiť", null).show()
+                android.app.AlertDialog.Builder(this@StudioActivity).setTitle(AppLanguage.text("Adresa servera Jellyfin"))
+                    .setView(field).setPositiveButton(AppLanguage.text("Použiť")) { _, _ -> address = field.text.toString().trim() }
+                    .setNegativeButton(AppLanguage.text("Zrušiť"), null).show()
             }
             StudioButton(if (busy) "Pripájam…" else if(code!=null)"Vytvoriť nový kód" else "Vytvoriť prihlasovací kód") {
                 if (!busy) scope.launch {
@@ -382,15 +387,15 @@ class StudioActivity : LocalizedActivity() {
             com.conreo.couchytv.ui.JellyfinShelf(items,loaded,nextUp,error,firstItemFocus,
                 onMode={nextUp=it},onRefresh={refresh++},onRandom={randomSelection=true},onManage={
                     android.app.AlertDialog.Builder(this@StudioActivity)
-                        .setTitle("Jellyfin · ${JellyfinLink.user(this@StudioActivity)}")
-                        .setMessage("Tento účet používa prehľad Jellyfin na ploche. Jeho odpojenie nezmení prihlásenie v aplikácii Jellyfin.")
-                        .setNegativeButton("Zavrieť",null)
-                        .setPositiveButton("Znovu pripojiť účet"){_,_->code=null;error="";reconnect=true}
-                        .setNeutralButton("Odpojiť účet"){_,_->
-                            android.app.AlertDialog.Builder(this@StudioActivity).setTitle("Odpojiť Jellyfin od plochy?")
-                                .setMessage("Pre opätovné pripojenie bude potrebný nový prihlasovací kód.")
-                                .setNegativeButton("Zrušiť",null)
-                                .setPositiveButton("Odpojiť"){_,_->JellyfinLink.disconnect(this@StudioActivity);connected=false;items=emptyList()}.show()
+                        .setTitle(AppLanguage.text("Jellyfin · ${JellyfinLink.user(this@StudioActivity)}"))
+                        .setMessage(AppLanguage.text("Tento účet používa prehľad Jellyfin na ploche. Jeho odpojenie nezmení prihlásenie v aplikácii Jellyfin."))
+                        .setNegativeButton(AppLanguage.text("Zavrieť"),null)
+                        .setPositiveButton(AppLanguage.text("Znovu pripojiť účet")){_,_->code=null;error="";reconnect=true}
+                        .setNeutralButton(AppLanguage.text("Odpojiť účet")){_,_->
+                            android.app.AlertDialog.Builder(this@StudioActivity).setTitle(AppLanguage.text("Odpojiť Jellyfin od plochy?"))
+                                .setMessage(AppLanguage.text("Pre opätovné pripojenie bude potrebný nový prihlasovací kód."))
+                                .setNegativeButton(AppLanguage.text("Zrušiť"),null)
+                                .setPositiveButton(AppLanguage.text("Odpojiť")){_,_->JellyfinLink.disconnect(this@StudioActivity);connected=false;items=emptyList()}.show()
                         }.show()
                 })
         }

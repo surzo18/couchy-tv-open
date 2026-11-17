@@ -8,8 +8,8 @@ import kotlinx.coroutines.*
 /** Local maintenance entry point: protected by DUMP (ADB/system), not callable by normal apps. */
 class RollbackReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
-        val cleanup = intent.action == "io.github.surzo18.couchytv.DISCARD_V2"
-        if (!cleanup && intent.action != "io.github.surzo18.couchytv.RESTORE_V2") return
+        val cleanup = intent.action == context.packageName+".DISCARD_V2"
+        if (!cleanup && intent.action != context.packageName+".RESTORE_V2") return
         val result = goAsync()
         CoroutineScope(Dispatchers.IO).launch {
             try {

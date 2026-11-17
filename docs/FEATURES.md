@@ -16,7 +16,7 @@ News starts empty. Add up to 20 HTTPS RSS/Atom feeds with a name, color and cate
 
 Weather uses a manually selected city, daily/hourly forecasts and °C/°F units. It can be hidden completely. Refresh is normally 30 minutes on the active home screen. There is no automatic IP geolocation. See service/license attribution in the panel.
 
-New series uses documented TVmaze schedule endpoints around today (three days before through three after), includes season-opening episodes and refreshes at most every six hours. US schedule/streaming coverage is incomplete and is not a region-specific movie-release catalog. Description, date, source, available rating and trailer search are shown in details.
+New releases starts with all providers disabled. Use Sources to choose the TVmaze API, optional cinema listings or the web calendar. The API covers season-opening episodes three days before through three after today; other adapters have different coverage. Data refresh at most every six hours. Details show descriptions, dates, source links, available ratings and trailer search. Coverage is incomplete; review [provider conditions](../SERVICES.md) before enabling a source.
 
 ## Albums and memories
 Import JPEG, PNG, WebP or MP4; select albums for the photo screensaver, exclude individual items and edit captions/date/place/album. A place can open a map. The optional memory card shuffles eligible photographs; interval is 2/5/10/15 minutes and display time 8/12/20 seconds. Settings are in Photo albums → Home memories. The screensaver shows album, caption, date, time and available weather with readability backgrounds. RAW development and automatic AI caption generation are not built in.
@@ -28,3 +28,6 @@ Hold the game icon to choose Road crossing or Scooter. Both support a remote, pa
 The eight-step wizard remembers progress and can be reopened from System. Optional permissions are requested for their respective functions. Help is divided into topics. Diagnostics include network/media/source state and bounded local error history: 30 days, 400 entries and 256 KiB, plus a capped last-crash record. Settings and game progress persist across normally signed updates; clearing app data does not preserve them.
 
 See [the user guide](USER-GUIDE.md), [privacy](../PRIVACY.md) and [testing limits](TESTING.md).
+
+## Automatic wallpaper rotation
+Automatic wallpaper changes are on by default: every two minutes on the cinematic home screen, the next eligible background fades through its preview using one video decoder. Turn this off in Wallpapers to keep your selection. Menus, other apps and the screensaver pause rotation; returning starts a fresh interval. The wake preference is independent. Assigned music follows the background.
