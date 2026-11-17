@@ -95,7 +95,7 @@ dependencies {
     // startup + scroll paths are AOT-compiled on first run instead of JIT'd —
     // the big cold-start "screen shows but not smooth yet" win.
     implementation("androidx.profileinstaller:profileinstaller:1.4.1")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.13.0")
     // Hardware-assisted video wallpaper playback.
     implementation("androidx.media3:media3-exoplayer:1.4.1")
     // Remote data sources use platform TLS certificate verification.
