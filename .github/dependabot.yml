@@ -4,7 +4,9 @@ updates:
     directory: /android
     schedule:
       interval: monthly
-    open-pull-requests-limit: 5
+    # Stable release: resume version proposals for a coordinated toolchain migration.
+    # Security update PRs have a separate limit and remain enabled.
+    open-pull-requests-limit: 0
     groups:
       kotlin-plugins:
         patterns:
