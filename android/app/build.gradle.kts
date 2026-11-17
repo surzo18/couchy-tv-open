@@ -81,7 +81,7 @@ dependencies {
     implementation(platform("androidx.compose:compose-bom:2024.09.03"))
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.foundation:foundation")
-    implementation("androidx.tv:tv-material:1.0.0")
+    implementation("androidx.tv:tv-material:1.1.0")
     // iOS-style continuous (squircle) corners — perceptually smoother than the
     // circular-arc RoundedCornerShape.
     implementation("androidx.graphics:graphics-shapes:1.1.0")
