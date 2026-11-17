@@ -1,0 +1,57 @@
+[
+  {
+    "path": "docs/screenshots/crossing-play.png",
+    "sha256": "26f4441d73c4f6e563c269caf59702a877c0030c6eac32216c89e5a005ab3e01",
+    "origin": "Public-edition Android emulator capture; original demo media and app interface only"
+  },
+  {
+    "path": "docs/screenshots/crossing.png",
+    "sha256": "eb9e682367dd241d6772350d0292a00a7c6a5bc8732ae3a3239c04e81d20e3fa",
+    "origin": "Public-edition Android emulator capture; original demo media and app interface only"
+  },
+  {
+    "path": "docs/screenshots/diagnostics.png",
+    "sha256": "196c43486eca6907e74d19bf44a61c05ab4d2afb22a038f56563015062840985",
+    "origin": "Public-edition Android emulator capture; original demo media and app interface only"
+  },
+  {
+    "path": "docs/screenshots/help.png",
+    "sha256": "f905e582ddaca4f8449af6addb823e3583d4f3d4e4afc022715a98d59d3ba0f6",
+    "origin": "Public-edition Android emulator capture; original demo media and app interface only"
+  },
+  {
+    "path": "docs/screenshots/home-aurora.png",
+    "sha256": "5366b5971908bc22c012abec0c6eb0284ecd10e0544d71e4233c8b1898a106f5",
+    "origin": "Public-edition Android emulator capture; original demo media and app interface only"
+  },
+  {
+    "path": "docs/screenshots/home-ember.png",
+    "sha256": "3a08218b29c27c2f5e790a96668e48a3818fa3b8ea1d496b2536527fb3deb547",
+    "origin": "Public-edition Android emulator capture; original demo media and app interface only"
+  },
+  {
+    "path": "docs/screenshots/home-ocean.png",
+    "sha256": "2ee8a7689e89f2a77e5ada606452f3dff05e0cd4fad206977f746a9163356e96",
+    "origin": "Public-edition Android emulator capture; original demo media and app interface only"
+  },
+  {
+    "path": "docs/screenshots/music.png",
+    "sha256": "e62f7c7a2198bcb4c641494247c23a90a171fd9a08f5b1faedc1afb35b851df2",
+    "origin": "Public-edition Android emulator capture; original demo media and app interface only"
+  },
+  {
+    "path": "docs/screenshots/setup.png",
+    "sha256": "64911c95d980696193e6b72efb13991a1ad40474ed19c4fca527ddc938de7fae",
+    "origin": "Public-edition Android emulator capture; original demo media and app interface only"
+  },
+  {
+    "path": "docs/screenshots/system.png",
+    "sha256": "06f22643526a83e5056a88cbd056c4071b3cedab9c184de42ea8e33154394670",
+    "origin": "Public-edition Android emulator capture; original demo media and app interface only"
+  },
+  {
+    "path": "docs/screenshots/wallpapers.png",
+    "sha256": "ac5b6ad1dfcebb7e43015596e095b7f7204fe1ade7edca5d3d0b6b1c88a1b4ae",
+    "origin": "Public-edition Android emulator capture; original demo media and app interface only"
+  }
+]

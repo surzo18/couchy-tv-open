@@ -1,0 +1,184 @@
+[
+  {
+    "path": "android/app/src/main/assets/game-audio/brake.wav",
+    "sha256": "625521ca605f5b291c2806561e6e59fd773383d6510f0e8801679c9f31f7f40e",
+    "bytes": 21644,
+    "license": "CC0-1.0",
+    "origin": "Original procedural output of scripts/generate-media.py"
+  },
+  {
+    "path": "android/app/src/main/assets/game-audio/coin.wav",
+    "sha256": "d1e3d77d28e51c15549368a264d96f85360996b0cf792bdf4afabe2c1fee7d5c",
+    "bytes": 10604,
+    "license": "CC0-1.0",
+    "origin": "Original procedural output of scripts/generate-media.py"
+  },
+  {
+    "path": "android/app/src/main/assets/game-audio/confirm.wav",
+    "sha256": "52b1ed11579ae2f3f4940232c6eb32238b7c94c34ce9722264da2d819b73ac32",
+    "bytes": 21644,
+    "license": "CC0-1.0",
+    "origin": "Original procedural output of scripts/generate-media.py"
+  },
+  {
+    "path": "android/app/src/main/assets/game-audio/gold.wav",
+    "sha256": "0e5a297c62381cb5e583f6aea388638bbcb06ec9c9df1762386b3a92ded0a3a7",
+    "bytes": 21644,
+    "license": "CC0-1.0",
+    "origin": "Original procedural output of scripts/generate-media.py"
+  },
+  {
+    "path": "android/app/src/main/assets/game-audio/hit.wav",
+    "sha256": "5cb644495ed3b982f8da07f47245fdfe9d922b7537c38a4d6af407fcaec5859e",
+    "bytes": 21644,
+    "license": "CC0-1.0",
+    "origin": "Original procedural output of scripts/generate-media.py"
+  },
+  {
+    "path": "android/app/src/main/assets/game-audio/jump.wav",
+    "sha256": "a1041884b5a9de0540ff1f007a005faea9e4811546825417bb6e5dd29bda0c23",
+    "bytes": 21644,
+    "license": "CC0-1.0",
+    "origin": "Original procedural output of scripts/generate-media.py"
+  },
+  {
+    "path": "android/app/src/main/assets/game-audio/land.wav",
+    "sha256": "d3c46029d65df5f314f2715daaf6826910a19f50f5a4b856c9ecf49d222367f6",
+    "bytes": 10604,
+    "license": "CC0-1.0",
+    "origin": "Original procedural output of scripts/generate-media.py"
+  },
+  {
+    "path": "android/app/src/main/assets/game-audio/rail_hit.wav",
+    "sha256": "0dba17056d967e636d1fa4cbe850b5b098f2d65eccce5b8035f2774bdb3e7763",
+    "bytes": 21644,
+    "license": "CC0-1.0",
+    "origin": "Original procedural output of scripts/generate-media.py"
+  },
+  {
+    "path": "android/app/src/main/assets/game-audio/reward.wav",
+    "sha256": "c4792c820ac24a56d02a0ad06cc15b8d704cdb6c958cb3d6f121aca81bb4733d",
+    "bytes": 21644,
+    "license": "CC0-1.0",
+    "origin": "Original procedural output of scripts/generate-media.py"
+  },
+  {
+    "path": "android/app/src/main/assets/game-audio/roll.wav",
+    "sha256": "5a77fb088cf93f39f0b5eb7bde6d75cd790dba7d69b026b33d577f4b89c095bf",
+    "bytes": 21644,
+    "license": "CC0-1.0",
+    "origin": "Original procedural output of scripts/generate-media.py"
+  },
+  {
+    "path": "android/app/src/main/assets/game-audio/splash.wav",
+    "sha256": "443df3216b49f2babfa06467bf3bee9e26555f6e7c78e84f66b7965e61a9405a",
+    "bytes": 21644,
+    "license": "CC0-1.0",
+    "origin": "Original procedural output of scripts/generate-media.py"
+  },
+  {
+    "path": "android/app/src/main/assets/game-audio/step.wav",
+    "sha256": "a2b8665f778f7fd1550a5be49813472467f0ec8e134ef2f030113a9a081053ad",
+    "bytes": 10604,
+    "license": "CC0-1.0",
+    "origin": "Original procedural output of scripts/generate-media.py"
+  },
+  {
+    "path": "android/app/src/main/assets/game-audio/ui.wav",
+    "sha256": "737677d36a01b35f3f04bd3e8e215414ccce4c9dab7e7eab73cb9fa2e1a9792d",
+    "bytes": 10604,
+    "license": "CC0-1.0",
+    "origin": "Original procedural output of scripts/generate-media.py"
+  },
+  {
+    "path": "android/app/src/main/assets/game-audio/unlock.wav",
+    "sha256": "91c22a69a694521117d2ef4c126ade0764ccd43c6ed73ba56cc45b97737883b3",
+    "bytes": 21644,
+    "license": "CC0-1.0",
+    "origin": "Original procedural output of scripts/generate-media.py"
+  },
+  {
+    "path": "android/app/src/main/assets/game-audio/warning.wav",
+    "sha256": "8f4a7d9dc8cf5796bfa11923356e1f185302b863e6e95565874ee13bae92fb6f",
+    "bytes": 21644,
+    "license": "CC0-1.0",
+    "origin": "Original procedural output of scripts/generate-media.py"
+  },
+  {
+    "path": "android/app/src/main/assets/game-audio/water.wav",
+    "sha256": "19f270f44ea841b720ca5a881dd5b896939bf5871a48acb6d34b98dec6ee10d5",
+    "bytes": 21644,
+    "license": "CC0-1.0",
+    "origin": "Original procedural output of scripts/generate-media.py"
+  },
+  {
+    "path": "android/app/src/main/assets/game-audio/welcome.wav",
+    "sha256": "c242ad87a84b792b2d88b67c5edf3712f77227c6c18d4c22b5563260c625e603",
+    "bytes": 52844,
+    "license": "CC0-1.0",
+    "origin": "Original procedural output of scripts/generate-media.py"
+  },
+  {
+    "path": "android/app/src/main/assets/game-audio/whoosh.wav",
+    "sha256": "4ec44c7c17b84a9c0d8bd4ee4d35f1a4a97fad2e2408f12660e9fdd45c025b5b",
+    "bytes": 21644,
+    "license": "CC0-1.0",
+    "origin": "Original procedural output of scripts/generate-media.py"
+  },
+  {
+    "path": "android/app/src/main/assets/game-audio/wood.wav",
+    "sha256": "ca890188b5a438a118942b895e661a4d40a41c41a1807622592446ba4f7a38f9",
+    "bytes": 21644,
+    "license": "CC0-1.0",
+    "origin": "Original procedural output of scripts/generate-media.py"
+  },
+  {
+    "path": "android/app/src/main/assets/thumbnails/Aurora.jpg",
+    "sha256": "3993b69dbbc2c27d7a09bdb5ffe1eabdaf68d7949d0dc2289657e16f9a34b0fb",
+    "bytes": 3006,
+    "license": "CC0-1.0",
+    "origin": "Original procedural output of scripts/generate-media.py"
+  },
+  {
+    "path": "android/app/src/main/assets/thumbnails/Ember.jpg",
+    "sha256": "d51d58fd0aa16984b007d44fd6bbd9a7cdb0945add3906fb9f02e83cc9103635",
+    "bytes": 3121,
+    "license": "CC0-1.0",
+    "origin": "Original procedural output of scripts/generate-media.py"
+  },
+  {
+    "path": "android/app/src/main/assets/thumbnails/Ocean.jpg",
+    "sha256": "43045328106d70f336c6d02e29e406f1c1168f71722050efe0b5324584936aa0",
+    "bytes": 3022,
+    "license": "CC0-1.0",
+    "origin": "Original procedural output of scripts/generate-media.py"
+  },
+  {
+    "path": "android/app/src/main/assets/wallpapers/Aurora.mp4",
+    "sha256": "aae5ac0f4b34d2250293b7050b13953ca221d923213a837986911c7c5771c89f",
+    "bytes": 3492110,
+    "license": "CC0-1.0",
+    "origin": "Original procedural output of scripts/generate-media.py"
+  },
+  {
+    "path": "android/app/src/main/assets/wallpapers/Ember.mp4",
+    "sha256": "3e2f9f4d2bcfb3437f2dd07380a699263acd17e1e032ff3be5508e2198c6ea64",
+    "bytes": 3492112,
+    "license": "CC0-1.0",
+    "origin": "Original procedural output of scripts/generate-media.py"
+  },
+  {
+    "path": "android/app/src/main/assets/wallpapers/Ocean.mp4",
+    "sha256": "b03a335263488a459fa214806158b89d7485f121e03879f6be294b8913d95b63",
+    "bytes": 3492106,
+    "license": "CC0-1.0",
+    "origin": "Original procedural output of scripts/generate-media.py"
+  },
+  {
+    "path": "android/app/src/main/res/font/cookie.ttf",
+    "sha256": "9daf3cc9e5efe1b65094cdf1f14729ef6f07a70c27ee0679bf7f544a828b080e",
+    "bytes": 43800,
+    "license": "OFL-1.1",
+    "origin": "Google Fonts / Cookie by Ania Kruk"
+  }
+]

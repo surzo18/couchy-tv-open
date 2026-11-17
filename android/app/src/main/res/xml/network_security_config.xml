@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Not applied to the manifest: user-managed LAN Jellyfin may use HTTP.
+     News sources require HTTPS. No bundled remote wallpaper host exceptions. -->
+<network-security-config><base-config cleartextTrafficPermitted="false" /></network-security-config>

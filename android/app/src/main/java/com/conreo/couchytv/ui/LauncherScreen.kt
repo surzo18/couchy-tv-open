@@ -1,0 +1,1783 @@
+package com.conreo.couchytv.ui
+
+import com.conreo.couchytv.ui.LocalizedText as Text
+import android.graphics.BitmapFactory
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.focusGroup
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.withFrameNanos
+import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.focusRestorer
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.tv.material3.MaterialTheme
+import androidx.compose.ui.res.stringResource
+import com.conreo.couchytv.Actions
+import com.conreo.couchytv.R
+import com.conreo.couchytv.data.CategoryCfg
+import com.conreo.couchytv.data.AppEntry
+import com.conreo.couchytv.data.AppRepository
+import com.conreo.couchytv.data.ConfigStore
+import com.conreo.couchytv.data.LAYOUT_DOCK
+import com.conreo.couchytv.data.LAYOUT_GRID
+import com.conreo.couchytv.data.LauncherConfig
+import com.conreo.couchytv.data.NetStatus
+import com.conreo.couchytv.data.networkStatusFlow
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+
+/** Icon size steps (card width) — 5 levels for fine control. */
+val ICON_SIZES = listOf(120.dp, 150.dp, 190.dp, 230.dp, 270.dp)
+
+/** Allocated ONCE — recomposition never rebuilds the scrim brushes. */
+// Full: darkens the whole wallpaper evenly.
+private val ScrimFull = Brush.verticalGradient(
+    listOf(
+        Color.Black.copy(alpha = 0.55f),
+        Color.Black.copy(alpha = 0.25f),
+        Color.Black.copy(alpha = 0.45f),
+    )
+)
+// Top & bottom: dark bands only where the status bar and dock/labels sit; the
+// middle of the wallpaper stays fully clear (video/aerials keep their punch).
+private val ScrimTopBottom = Brush.verticalGradient(
+    0.0f to Color.Black.copy(alpha = 0.6f),
+    0.16f to Color.Black.copy(alpha = 0f),
+    0.82f to Color.Black.copy(alpha = 0f),
+    1.0f to Color.Black.copy(alpha = 0.5f),
+)
+// Top only — dark band under the status bar, rest clear.
+private val ScrimTop = Brush.verticalGradient(
+    0.0f to Color.Black.copy(alpha = 0.6f),
+    0.20f to Color.Black.copy(alpha = 0f),
+    1.0f to Color.Black.copy(alpha = 0f),
+)
+// Bottom only — dark band under the dock/labels, rest clear.
+private val ScrimBottom = Brush.verticalGradient(
+    0.0f to Color.Black.copy(alpha = 0f),
+    0.80f to Color.Black.copy(alpha = 0f),
+    1.0f to Color.Black.copy(alpha = 0.5f),
+)
+/** Spacing steps between cards — 5 levels. */
+val GAP_SIZES = listOf(4.dp, 10.dp, 16.dp, 24.dp, 32.dp)
+/** Video wallpaper playback speeds (index stored in config.videoSpeed). */
+val VIDEO_SPEEDS = listOf(0.25f, 0.5f, 0.75f, 1f)
+/** Icon corner roundness steps (index stored in config.cornerRadius). */
+val CORNER_RADII = listOf(0.dp, 4.dp, 10.dp, 18.dp, 28.dp)
+/** Manual whole-UI scale steps (config.uiScale 1..5). <1 = more compact. */
+val UI_SCALES = listOf(0.75f, 0.9f, 1.0f, 1.15f, 1.3f)
+
+/** The effective UI scale: 0 = Auto (compact high-DPI TVs down to ~1200dp of
+ *  width so every device reads the same, never enlarging roomy ones); 1..5 pick
+ *  a fixed value from [UI_SCALES]. */
+fun uiScaleFactor(index: Int, screenWidthDp: Int): Float =
+    if (index <= 0) (screenWidthDp / 1200f).coerceIn(0.6f, 1.0f)
+    else UI_SCALES[(index - 1).coerceIn(0, UI_SCALES.size - 1)]
+
+/** Global text boost (sp only, not dp): 1 = off. Raise to enlarge every label
+ *  without touching icons or layout. */
+const val FONT_BOOST = 1f
+
+/** Renders [content] at [scale]× the device density — one knob shrinks/grows
+ *  every dp and sp uniformly (icons, text, settings, wizard). Also rescales the
+ *  Configuration so width-derived layout (dock/grid columns) stays correct. */
+@Composable
+fun ScaledUi(scale: Float, content: @Composable () -> Unit) {
+    val base = androidx.compose.ui.platform.LocalDensity.current
+    val cfg = androidx.compose.ui.platform.LocalConfiguration.current
+    val scaledCfg = remember(cfg, scale) {
+        android.content.res.Configuration(cfg).apply {
+            screenWidthDp = (cfg.screenWidthDp / scale).toInt()
+            screenHeightDp = (cfg.screenHeightDp / scale).toInt()
+            smallestScreenWidthDp = (cfg.smallestScreenWidthDp / scale).toInt()
+        }
+    }
+    androidx.compose.runtime.CompositionLocalProvider(
+        androidx.compose.ui.platform.LocalDensity provides
+            androidx.compose.ui.unit.Density(base.density * scale, base.fontScale * FONT_BOOST),
+        androidx.compose.ui.platform.LocalConfiguration provides scaledCfg,
+    ) { content() }
+}
+// compositionLocalOf (not static): roundness changes at runtime and must
+// recompose every reader, including those inside subcompositions like the
+// dock's BoxWithConstraints (its 2nd-row peek) — static wouldn't reach them.
+val LocalCornerRadius = androidx.compose.runtime.compositionLocalOf { 10.dp }
+
+/**
+ * How many full-size cards fit in [available] width, and the spacing to use.
+ * Icons NEVER shrink: if the requested gap doesn't fit, the gap is squeezed
+ * instead so every icon keeps its exact size.
+ */
+fun fitRow(available: Dp, cardWidth: Dp, gap: Dp): Pair<Int, Dp> {
+    val cols = (((available + gap) / (cardWidth + gap)).toInt()).coerceAtLeast(1)
+    val leftover = available - cardWidth * cols
+    val used = if (cols > 1 && leftover > 0.dp) {
+        val spread = leftover / (cols - 1)
+        if (spread < gap) spread else gap
+    } else 0.dp
+    return cols to used
+}
+
+/** Unwrap a (possibly wrapped) Context to its host Activity, or null. */
+private fun android.content.Context.findActivity(): android.app.Activity? {
+    var c: android.content.Context? = this
+    while (c is android.content.ContextWrapper) {
+        if (c is android.app.Activity) return c
+        c = c.baseContext
+    }
+    return null
+}
+
+@OptIn(
+    androidx.compose.foundation.ExperimentalFoundationApi::class,
+    androidx.compose.ui.ExperimentalComposeUiApi::class,
+)
+@Composable
+fun LauncherApp(rescanTick: Int, homeTick: Int = 0, inputTick: Int = 0, sessionWallpaper: String = "", onNextWallpaper: () -> Unit = {}) {
+    val context = LocalContext.current
+    val store = remember { ConfigStore(context.applicationContext) }
+    val scope = rememberCoroutineScope()
+
+    // Wait for the persisted config before drawing anything, so the setup
+    // wizard never flashes for users who already completed it.
+    val configOrNull by produceState<LauncherConfig?>(initialValue = null) {
+        store.flow.collect { value = it }
+    }
+    // Kick off the app scan on the FIRST composition — concurrent with the
+    // DataStore config read, not serialized after it (scan takes no config).
+    // Warm relaunches start from the in-memory cache (instant); a fresh scan
+    // still runs to pick up changes. Not rendered until past the gates below.
+    val appsOrNull by produceState(initialValue = AppRepository.memoryCache, rescanTick) {
+        value = withContext(Dispatchers.Default) { AppRepository.scan(context.applicationContext) }
+    }
+    val config = configOrNull ?: run {
+        LoadingScreen()
+        return
+    }
+
+    val uiScale = uiScaleFactor(
+        config.uiScale,
+        androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp,
+    )
+
+    val activity = remember(context) { context.findActivity() }
+    // The SurfaceView video wallpaper needs a transparent window to show through;
+    // every other mode draws an opaque wallpaper, so keep the window opaque then
+    // (a transparent window would let whatever is behind the home leak through).
+    val videoWallpaper = config.useBuiltinAerials ||
+        (config.useVideoWallpaper && config.videoUri.isNotEmpty())
+    LaunchedEffect(activity, videoWallpaper) {
+        activity?.window?.setBackgroundDrawable(
+            if (videoWallpaper) null
+            else android.graphics.drawable.ColorDrawable(android.graphics.Color.BLACK)
+        )
+    }
+
+    if (!config.setupDone) {
+        ScaledUi(uiScale) {
+            LiteTvTheme(accent = ACCENTS[0]) {
+                SetupWizard(
+                    onDone = {
+                        scope.launch { store.update { it.copy(setupDone = true) } }
+                    },
+                    onVpnChosen = { pkg ->
+                        scope.launch {
+                            store.update {
+                                // Picked an app → VPN button opens it; skipped → hide it.
+                                if (pkg == null) it.copy(showVpnButton = false, vpnApp = "")
+                                else it.copy(showVpnButton = true, vpnApp = pkg)
+                            }
+                        }
+                    },
+                )
+            }
+        }
+        return
+    }
+
+    // Hold the sober loading screen until the launcher can render COMPLETE —
+    // every app scanned and every icon decoded.
+    val apps = appsOrNull ?: run {
+        LoadingScreen()
+        return
+    }
+    // flowOn(IO): the callbackFlow's initial compute() does ConnectivityManager
+    // binder calls — keep them off the main thread on the first real frame.
+    val net by remember { networkStatusFlow(context).flowOn(Dispatchers.IO) }
+        .collectAsStateWithLifecycle(initialValue = NetStatus())
+
+    // Bump on every ON_RESUME so the clock/date refresh immediately after
+    // sleep — they normally only tick on minute boundaries via produceState.
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    var resumeTick by remember { mutableIntStateOf(0) }
+    DisposableEffect(lifecycleOwner) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) resumeTick++
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
+    // US formats throughout (e.g. "Mon, Oct 19").
+    val locale = Locale.US
+    val time by produceState(initialValue = "", config.h24, resumeTick) {
+        val fmt = SimpleDateFormat(if (config.h24) "HH:mm" else "h:mm a", locale)
+        while (true) {
+            value = fmt.format(Date())
+            delay(60_000L - System.currentTimeMillis() % 60_000L + 50L)
+        }
+    }
+    val date by produceState(initialValue = "", config.dateFormat, resumeTick) {
+        val pattern = com.conreo.couchytv.data.DATE_FORMATS
+            .getOrElse(config.dateFormat) { "" }
+        if (pattern.isEmpty()) { value = ""; return@produceState }
+        val fmt = SimpleDateFormat(pattern, locale)
+        while (true) {
+            value = fmt.format(Date())
+            delay(60_000L - System.currentTimeMillis() % 60_000L + 50L)
+        }
+    }
+    // Home-screen centerpiece date and the fractional hour driving the greeting
+    // and the sky gradient — both refresh on the minute.
+    val centerDate by produceState(initialValue = "", resumeTick) {
+        val fmt = SimpleDateFormat("EEEE, MMMM d", locale)
+        while (true) {
+            value = fmt.format(Date())
+            delay(60_000L - System.currentTimeMillis() % 60_000L + 50L)
+        }
+    }
+    val dayHour by produceState(initialValue = 12f, resumeTick) {
+        while (true) {
+            val c = java.util.Calendar.getInstance()
+            value = c.get(java.util.Calendar.HOUR_OF_DAY) + c.get(java.util.Calendar.MINUTE) / 60f
+            delay(60_000L - System.currentTimeMillis() % 60_000L + 50L)
+        }
+    }
+    val greeting = stringResource(
+        when {
+            dayHour >= 22f || dayHour < 5f -> R.string.greeting_night
+            dayHour < 12f -> R.string.greeting_morning
+            dayHour < 17f -> R.string.greeting_afternoon
+            else -> R.string.greeting_evening
+        }
+    )
+
+    // TV inputs (HDMI etc.) behave like apps: they join the app list below.
+    val rawInputs by produceState(emptyList<AppEntry>(), inputTick) {
+        value = withContext(Dispatchers.IO) { com.conreo.couchytv.data.Inputs.load(context) }
+    }
+    val inputs = remember(rawInputs, config.inputIcons) {
+        rawInputs.filter { it.inputState == android.media.tv.TvInputManager.INPUT_STATE_CONNECTED }
+            .map { com.conreo.couchytv.data.Inputs.styled(it, config.inputIcons[it.pkg]) }
+    }
+    val allApps = remember(apps, inputs) { apps + inputs }
+    val inputsName = stringResource(R.string.cat_inputs)
+    var showInputPicker by remember { mutableStateOf(false) }
+    val hasStore = remember { Actions.isInstalled(context, AppRepository.PLAY_STORE_PKG) }
+    val hasSleepTimer = remember { Actions.isInstalled(context, AppRepository.SLEEP_TIMER_PKG) }
+
+    // New installs are auto-added to the FIRST section.
+    // New inputs go to their own "Vstupy" section (created on demand) instead.
+    LaunchedEffect(allApps) {
+        if (apps.isEmpty()) return@LaunchedEffect
+        val current = allApps.map { it.pkg }.toSet()
+        val inputPkgs = inputs.map { it.pkg }.toSet()
+        store.update { cfg ->
+            // A console's CEC input comes and goes with its power state; remember
+            // inputs so a returning one keeps its section instead of resetting.
+            val known = current + cfg.knownApps.filter { com.conreo.couchytv.data.Inputs.isInput(it) }
+            val newInputs = inputPkgs.filter { it !in cfg.knownApps && it !in cfg.sections }
+            val added = emptySet<String>() // New apps belong in More; keep favorites intentional.
+            if (newInputs.isEmpty() && added.isEmpty() && known == cfg.knownApps) return@update cfg
+            val first = cfg.categories.first().id
+            val cats = if (newInputs.isNotEmpty() && cfg.categories.none { it.id == "inputs" })
+                cfg.categories + com.conreo.couchytv.data.CategoryCfg("inputs", inputsName)
+            else cfg.categories
+            cfg.copy(
+                knownApps = known,
+                categories = cats,
+                sections = cfg.sections + added.associateWith { setOf(first) } +
+                    newInputs.associateWith { setOf("inputs") },
+            )
+        }
+    }
+
+    var menuFor by remember { mutableStateOf<AppEntry?>(null) }
+    var favoriteReplacement by remember { mutableStateOf<AppEntry?>(null) }
+    var favoritesTick by remember { mutableIntStateOf(0) }
+    var movePkg by remember { mutableStateOf<String?>(null) }
+    var showSettings by remember { mutableStateOf(false) }
+    var showMore by remember { mutableStateOf(false) }
+    val v3Enabled = com.conreo.couchytv.Experience.enabled
+    val lastInteraction = com.conreo.couchytv.Experience.interaction
+    val idleSeconds = com.conreo.couchytv.Experience.idleSeconds
+    val artAllowed = v3Enabled && config.layout == com.conreo.couchytv.data.LAYOUT_CINEMA &&
+        !showMore && !showSettings && menuFor == null && favoriteReplacement == null && movePkg == null && !showInputPicker && com.conreo.couchytv.Experience.homePanel.isEmpty()
+    androidx.compose.runtime.SideEffect { com.conreo.couchytv.Experience.canReturnToApp = artAllowed }
+    LaunchedEffect(artAllowed, lastInteraction, idleSeconds, resumeTick) {
+        com.conreo.couchytv.Experience.artOnly = false
+        if (artAllowed && idleSeconds > 0) {
+            delay(idleSeconds * 1000L)
+            if (lifecycleOwner.lifecycle.currentState.isAtLeast(androidx.lifecycle.Lifecycle.State.RESUMED))
+                com.conreo.couchytv.Experience.artOnly = true
+        }
+    }
+    val controlsAlpha = animateFloatAsState(
+        if (com.conreo.couchytv.Experience.artOnly) 0f else 1f, tween(450), label = "artControls")
+    LaunchedEffect(homeTick) {
+        com.conreo.couchytv.Experience.homePanel = ""
+        showMore = false
+        menuFor = null
+        favoriteReplacement = null
+        movePkg = null
+        showSettings = false
+    }
+    androidx.activity.compose.BackHandler(showMore && menuFor == null && favoriteReplacement == null && movePkg == null && !showSettings) {
+        showMore = false
+    }
+    var wallpaperVersion by remember { mutableIntStateOf(0) }
+
+    // Drop empty sections: an empty row is dead space AND a focus trap that
+    // stops D-pad navigation from reaching the section below it.
+    val categorized = remember(allApps, config) {
+        AppRepository.categorize(allApps, config).filter { it.second.isNotEmpty() }
+    }
+    val sections = categorized
+    val visibleFavorites = sections.firstOrNull { it.first.id == "favorites" }?.second.orEmpty()
+        .filter { !com.conreo.couchytv.data.Inputs.isInput(it.pkg) && it.pkg !in config.hidden }.take(4)
+    fun changeFavorite(app: AppEntry, replace: String? = null) {
+        scope.launch {
+            store.update { com.conreo.couchytv.data.Favorites.toggle(it, allApps, app, replace) }
+            favoriteReplacement = null
+            showMore = false
+            withFrameNanos { }; withFrameNanos { }
+            favoritesTick++
+        }
+    }
+    val openMenu: (AppEntry) -> Unit = { app ->
+        if (movePkg == null) menuFor = app
+    }
+    val defaultAccent = ACCENTS[config.accent.coerceIn(0, ACCENTS.size - 1)]
+    val accentUri = if (config.videoUri == "asset:///wallpapers/Aurora.mp4" && sessionWallpaper.isNotEmpty()) sessionWallpaper else config.videoUri
+    val sampledAccent by produceState(defaultAccent, accentUri, defaultAccent) {
+        value = withContext(Dispatchers.IO) {
+            Color(com.conreo.couchytv.WallpaperAccent.color(context, accentUri,
+                android.graphics.Color.rgb((defaultAccent.red * 255).toInt(), (defaultAccent.green * 255).toInt(), (defaultAccent.blue * 255).toInt())))
+        }
+    }
+    val accent by androidx.compose.animation.animateColorAsState(sampledAccent, tween(700), label = "wallpaperAccent")
+    var focusedTint by remember { mutableStateOf(accent) }
+    val onCardFocus: (AppEntry) -> Unit = remember { { focusedTint = it.tile } }
+    val wallpaperTint = androidx.compose.animation.animateColorAsState(
+        focusedTint, animationSpec = tween(450), label = "wallpaperFocusTint"
+    )
+
+    // ----- display dimensions: size + spacing drive everything, columns
+    // are always derived from available width (never a fixed count) -----
+    val cardWidth: Dp = ICON_SIZES[config.iconScale.coerceIn(0, ICON_SIZES.size - 1)]
+    val gap: Dp = GAP_SIZES[config.spacing.coerceIn(0, GAP_SIZES.size - 1)]
+
+    // Columns as laid out on screen (mirrors the padding used by GridSection /
+    // DockArea) — move mode needs them to shift an icon up/down by a full row.
+    val screenW: Dp = LocalConfiguration.current.screenWidthDp.dp
+    val gridCols = fitRow(screenW - 88.dp, cardWidth, gap).first
+    val dockCols = fitRow(screenW - 116.dp, cardWidth, gap).first
+
+    var dockExpanded by remember { mutableStateOf(false) }
+    LaunchedEffect(config.layout) { if (config.layout != LAYOUT_DOCK) dockExpanded = false }
+
+    // ----- move-mode helpers -----
+    fun findMoving(): Triple<Int, List<AppEntry>, Int>? {
+        val pkg = movePkg ?: return null
+        categorized.forEachIndexed { catIndex, (_, list) ->
+            val i = list.indexOfFirst { it.pkg == pkg }
+            if (i >= 0) return Triple(catIndex, list, i)
+        }
+        return null
+    }
+
+    fun moveWithinRow(delta: Int) {
+        val (catIndex, list, i) = findMoving() ?: return
+        val j = i + delta
+        if (j < 0 || j >= list.size) return
+        val catId = categorized[catIndex].first.id
+        val newOrder = list.map { it.pkg }.toMutableList().also { l ->
+            val tmp = l[i]; l[i] = l[j]; l[j] = tmp
+        }
+        scope.launch { store.update { it.copy(order = it.order + (catId to newOrder)) } }
+    }
+
+    fun moveAcrossRows(delta: Int) {
+        val (catIndex, list, i) = findMoving() ?: return
+        val target = catIndex + delta
+        if (target < 0 || target >= categorized.size) return
+        val pkg = movePkg ?: return
+        val app = allApps.firstOrNull { it.pkg == pkg } ?: return
+        val sourceId = categorized[catIndex].first.id
+        val targetId = categorized[target].first.id
+        val targetList = categorized[target].second
+        if (targetList.any { it.pkg == pkg }) return // already in target section
+        val insertAt = i.coerceAtMost(targetList.size)
+        val newTargetOrder = targetList.map { it.pkg }.toMutableList().also { it.add(insertAt, pkg) }
+        val newSourceOrder = list.map { it.pkg }.filter { it != pkg }
+        scope.launch {
+            store.update { cfg ->
+                val effective = AppRepository.sectionsOf(app, cfg)
+                cfg.copy(
+                    sections = cfg.sections + (pkg to (effective - sourceId + targetId)),
+                    order = cfg.order + (sourceId to newSourceOrder) + (targetId to newTargetOrder),
+                )
+            }
+        }
+    }
+
+    // Reorder the moving app within its own section to a new index.
+    fun reorderWithin(catIndex: Int, list: List<AppEntry>, from: Int, to: Int) {
+        if (from == to) return
+        val catId = categorized[catIndex].first.id
+        val seq = list.map { it.pkg }.toMutableList()
+        val p = seq.removeAt(from)
+        seq.add(to.coerceIn(0, seq.size), p)
+        scope.launch { store.update { it.copy(order = it.order + (catId to seq)) } }
+    }
+
+    // Grid: up/down move by a full row (±cols) inside the section; past the
+    // top/bottom edge it hops to the neighbouring section.
+    fun moveGridVertical(delta: Int, cols: Int) {
+        val (catIndex, list, i) = findMoving() ?: return
+        val size = list.size
+        if (delta < 0) {
+            if (i < cols) moveAcrossRows(-1) else reorderWithin(catIndex, list, i, i - cols)
+        } else {
+            val lastRowStart = ((size - 1) / cols) * cols
+            if (i >= lastRowStart) moveAcrossRows(1)
+            else reorderWithin(catIndex, list, i, minOf(i + cols, size - 1))
+        }
+    }
+
+    fun moveHorizontal(delta: Int) = moveWithinRow(delta)
+
+    fun moveVertical(delta: Int) = when (config.layout) {
+        com.conreo.couchytv.data.LAYOUT_CINEMA -> {
+            val moving = findMoving()
+            if (moving != null) {
+                val (catIndex, list, from) = moving
+                val to = from + delta * 4
+                if (to in list.indices) reorderWithin(catIndex, list, from, to)
+            }
+            Unit
+        }
+        LAYOUT_GRID -> moveGridVertical(delta, gridCols)
+        LAYOUT_DOCK -> moveGridVertical(delta, dockCols)
+        else -> moveAcrossRows(delta)
+    }
+
+    val moveFocus = remember { FocusRequester() }
+    LaunchedEffect(categorized, movePkg) {
+        if (movePkg != null) runCatching { moveFocus.requestFocus() }
+    }
+
+    // ----- wallpaper: decoded off the main thread, downsampled, cached.
+    // A ~100px copy is decoded alongside: upscaled by the GPU it looks
+    // blurred, and crossfading it in costs one texture blend per frame
+    // instead of a full-screen RenderEffect blur (heavy on TV GPUs). -----
+    val wallpaperPair by produceState<Pair<ImageBitmap?, ImageBitmap?>>(
+        initialValue = null to null, config.useCustomWallpaper, wallpaperVersion
+    ) {
+        value = if (!config.useCustomWallpaper) null to null
+        else withContext(Dispatchers.IO) {
+            val f = File(context.filesDir, "wallpaper.jpg")
+            if (!f.exists()) null to null
+            else runCatching {
+                // 1280px is indistinguishable as a scrimmed background but the
+                // texture is ~2.3× smaller than 1920 — TV GPUs choke on the
+                // first upload of full-res textures. prepareToDraw() moves the
+                // upload off the first visible frame.
+                val sharp = decodeDownsampled(f, maxWidth = 1280)
+                    ?.also { it.prepareToDraw() }?.asImageBitmap()
+                val blurred = decodeDownsampled(f, maxWidth = 96)
+                    ?.also { it.prepareToDraw() }?.asImageBitmap()
+                sharp to blurred
+            }.getOrDefault(null to null)
+        }
+    }
+    val (wallpaperSharp, wallpaperBlurred) = wallpaperPair
+    // The sky gradient only needs rebuilding every few minutes; the quantized
+    // key keeps it from allocating a new brush each tick.
+    val skyKey = (dayHour * 12f).toInt()
+    val presetBrush = remember(config.wallpaper, config.dynamicGradient, skyKey) {
+        if (config.dynamicGradient) timeOfDayBrush(skyKey / 12f)
+        else WALLPAPERS[config.wallpaper.coerceIn(0, WALLPAPERS.size - 1)].brush()
+    }
+
+    // ----- Built-in aerial videos: the manifests ship with the launcher, so
+    // there's no external dependency — pick one, rotate every 10 minutes. -----
+    val aerialWallpaper by produceState<String?>(
+        initialValue = null,
+        config.useBuiltinAerials, config.builtinSource, wallpaperVersion,
+    ) {
+        if (!config.useBuiltinAerials) {
+            value = null
+            return@produceState
+        }
+        // NOTE: value is intentionally NOT reset here — when the collection
+        // changes, the previous video keeps playing until the new one is
+        // picked, instead of flashing back to the preset background.
+        val aerials = withContext(Dispatchers.IO) {
+            com.conreo.couchytv.data.BuiltinAerials.load(context, config.builtinSource)
+        }
+        if (aerials.isEmpty()) return@produceState
+        // Pick one, different from the current so the uri always changes (which
+        // drives the fade out→in). The next is chosen when this clip ENDS
+        // (onEnded bumps wallpaperVersion, re-running this) — a continuous
+        // shuffle. A 10-min safety timer also advances very long clips.
+        val current = value
+        var next = aerials.random()
+        if (aerials.size > 1) while (next == current) next = aerials.random()
+        value = next
+        delay(10 * 60_000L)
+        wallpaperVersion++
+    }
+
+    // Aerials stream from a CDN. Right after the TV powers on, the network/DNS
+    // isn't up yet, so the first clip fails to load — show the gradient instead
+    // of a black screen, and retry: quickly once the network reconnects,
+    // otherwise backing off, until a clip streams.
+    var aerialError by remember { mutableStateOf(false) }
+    LaunchedEffect(aerialError, net.connected) {
+        if (!aerialError) return@LaunchedEffect
+        delay(if (net.connected) 2500L else 6000L)
+        aerialError = false
+        wallpaperVersion++
+    }
+
+    val corner: Dp = CORNER_RADII[config.cornerRadius.coerceIn(0, CORNER_RADII.size - 1)]
+    Box(Modifier.fillMaxSize()) {
+    ScaledUi(uiScale) {
+    androidx.compose.runtime.CompositionLocalProvider(
+        LocalCornerRadius provides corner, LocalCardFocus provides onCardFocus
+    ) {
+    LiteTvTheme(accent = accent) {
+        Box(
+            Modifier
+                .fillMaxSize()
+                .onPreviewKeyEvent { event ->
+                    // MENU always opens launcher settings — the only entry point
+                    // when the user hides the status bar.
+                    if (event.type == KeyEventType.KeyDown && event.key == Key.Menu) {
+                        showSettings = true
+                        return@onPreviewKeyEvent true
+                    }
+                    if (movePkg == null) return@onPreviewKeyEvent false
+                    // Move mode owns EVERY key event. Ending it must happen on
+                    // the KEY-UP: ending on key-down let the release fall
+                    // through to the card underneath as a click → app launch.
+                    if (event.type == KeyEventType.KeyUp) {
+                        when (event.key) {
+                            Key.DirectionCenter, Key.Enter, Key.NumPadEnter,
+                            Key.Back, Key.Escape,
+                            -> movePkg = null // drop (or cancel) on release
+                            else -> {}
+                        }
+                        return@onPreviewKeyEvent true
+                    }
+                    when (event.key) {
+                        Key.DirectionLeft -> { moveHorizontal(-1); true }
+                        Key.DirectionRight -> { moveHorizontal(1); true }
+                        Key.DirectionUp -> { moveVertical(-1); true }
+                        Key.DirectionDown -> { moveVertical(1); true }
+                        else -> true // swallow select/cancel key-downs too
+                    }
+                }
+        ) {
+            // Wallpaper + readability scrim.
+            // Priority: built-in aerials > local video > photo > preset.
+            val videoSpeed = VIDEO_SPEEDS[config.videoSpeed.coerceIn(0, VIDEO_SPEEDS.size - 1)]
+            val aerial = aerialWallpaper
+            if (aerial != null && net.connected && !aerialError) {
+                VideoWallpaper(
+                    uri = aerial,
+                    speed = videoSpeed,
+                    loop = false, // play once, then shuffle to the next aerial
+                    coverBrush = presetBrush,
+                    // Stream failed — a dead clip, or (at power-on) the network
+                    // isn't ready yet. Fall back to the gradient and retry via
+                    // aerialError, instead of sitting on the gradient cover.
+                    onEnded = { wallpaperVersion++ },
+                    onError = { aerialError = true },
+                )
+            } else if (config.useVideoWallpaper && config.videoUri.isNotEmpty()) {
+                VideoWallpaper(
+                    uri = if (config.videoUri == "asset:///wallpapers/Aurora.mp4" && sessionWallpaper.isNotEmpty()) sessionWallpaper else config.videoUri,
+                    speed = videoSpeed, loop = true, coverBrush = presetBrush,
+                )
+            } else if (wallpaperSharp != null) {
+                Image(
+                    bitmap = wallpaperSharp,
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            } else {
+                Box(Modifier.fillMaxSize().background(presetBrush))
+            }
+            // Dock-expanded overlay: cheap pseudo-blur (tiny bitmap upscaled)
+            // + dim, crossfaded. Works identically on every Android version.
+            val overlayAlpha by animateFloatAsState(
+                targetValue = if (dockExpanded) 1f else 0f,
+                animationSpec = tween(1000),
+                label = "dockOverlay",
+            )
+            if (overlayAlpha > 0.01f) {
+                if (wallpaperBlurred != null) {
+                    Image(
+                        bitmap = wallpaperBlurred,
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize().graphicsLayer { alpha = overlayAlpha },
+                    )
+                }
+                Box(
+                    Modifier
+                        .fillMaxSize()
+                        .graphicsLayer { alpha = overlayAlpha }
+                        .background(Color.Black.copy(alpha = 0.45f))
+                )
+            }
+            when (config.scrimMode) {
+                4 -> {} // off
+                3 -> Box(Modifier.fillMaxSize().background(ScrimFull))
+                2 -> Box(Modifier.fillMaxSize().background(ScrimBottom))
+                1 -> Box(Modifier.fillMaxSize().background(ScrimTop))
+                else -> Box(Modifier.fillMaxSize().background(ScrimTopBottom))
+            }
+
+            // A subtle color wash follows the selected app without interrupting video.
+            Box(Modifier.fillMaxSize().drawBehind {
+                // Read animation state in drawing, not in the full launcher composition.
+                drawRect(Brush.verticalGradient(
+                    listOf(Color.Transparent, wallpaperTint.value.copy(alpha = 0.22f))
+                ))
+            })
+
+            // Launch entrance: after the boot logo, wait a beat, then the glass
+            // panels slide in (status bar from the top, dock from the bottom) and
+            // the icons fade in after.
+            var introShown by remember { mutableStateOf(false) }
+            LaunchedEffect(Unit) { delay(450); introShown = true }
+            val introTop by animateFloatAsState(
+                targetValue = if (introShown) 1f else 0f,
+                animationSpec = tween(340, easing = FastOutSlowInEasing),
+                label = "introTop",
+            )
+
+            Box(Modifier.align(Alignment.TopEnd).padding(top=if(NewsUi.enabled && NewsUi.items.isNotEmpty())112.dp else if(com.conreo.couchytv.Weather.enabled || com.conreo.couchytv.ExternalMedia.current!=null)80.dp else 58.dp,end=40.dp)){MemoryPortal(artAllowed)}
+            if(com.conreo.couchytv.Experience.artOnly) IdleInfo()
+            NowPlayingNotice(artAllowed)
+            Column(Modifier.fillMaxSize().graphicsLayer { alpha = controlsAlpha.value }) {
+                // The status bar sits ABOVE the content, so Up from the top row
+                // reaches it — and its height IS the content's top inset (the top
+                // padding is a function of the bar's height, nothing hardcoded).
+                // When hidden it collapses to an invisible 4dp strip that is still
+                // focusable: Up from the top row slides it back into view.
+                var statusBarFocused by remember { mutableStateOf(false) }
+                val statusBarHeight by animateDpAsState(
+                    targetValue = if (config.showStatusBar || statusBarFocused) 98.dp else 4.dp,
+                    label = "statusBarHeight",
+                )
+                Box(
+                    Modifier
+                        .fillMaxWidth()
+                        .height(statusBarHeight)
+                        .clipToBounds()
+                        .onFocusChanged { statusBarFocused = it.hasFocus }
+                        .focusGroup()
+                        // Entrance: slide down from the top + fade in.
+                        .graphicsLayer {
+                            translationY = (introTop - 1f) * size.height
+                            alpha = introTop
+                        }
+                ) {
+                    StatusBar(
+                        net = net,
+                        time = time,
+                        date = date,
+                        // The dock home has its own big clock; show the small one
+                        // only where there isn't one.
+                        showClock = !(config.layout == LAYOUT_DOCK && !dockExpanded),
+                        showStore = hasStore,
+                        showSleepTimer = hasSleepTimer,
+                        showVpn = config.showVpnButton,
+                        glass = config.statusBarGlass,
+                        showInputs = inputs.any { it.pkg !in config.hidden },
+                        onInputsClick = { showInputPicker = true },
+                        onStoreClick = { Actions.launchApp(context, AppRepository.PLAY_STORE_PKG) },
+                        onSleepTimerClick = { Actions.launchApp(context, AppRepository.SLEEP_TIMER_PKG) },
+                        onVpnClick = {
+                            if (config.vpnApp.isNotEmpty()) Actions.launchApp(context, config.vpnApp)
+                            else Actions.openVpnSettings(context)
+                        },
+                        onNetworkClick = { Actions.openNetworkSettings(context) },
+                        onSettingsClick = { showSettings = true },
+                        onOriginalClick = { Actions.openOriginalHome(context) },
+                        onWallpaperClick = if (v3Enabled) ({ context.startActivity(android.content.Intent(context, com.conreo.couchytv.StudioActivity::class.java)) })
+                            else if (config.useVideoWallpaper && config.videoUri == "asset:///wallpapers/Aurora.mp4") onNextWallpaper else null,
+                        onShuffleClick = onNextWallpaper,
+                        onPictureClick = { Actions.openPictureSettings(context) },
+                        onSoundClick = { Actions.openSoundSettings(context) },
+                        onTvSettingsClick = { Actions.openTvQuickSettings(context) },
+                    )
+                }
+                when (config.layout) {
+                    com.conreo.couchytv.data.LAYOUT_CINEMA -> CinemaHome(
+                        modifier = Modifier.weight(1f).fillMaxWidth(),
+                        favorites = sections.firstOrNull { it.first.id == "favorites" }?.second.orEmpty(),
+                        others = sections.firstOrNull { it.first.id == AppRepository.ALL_APPS_ID }?.second.orEmpty(),
+                        inputs = inputs.filter { it.pkg !in config.hidden },
+                        accent = accent, movePkg = movePkg, moveFocus = moveFocus,
+                        expanded = showMore, homeTick = homeTick + favoritesTick,
+                        onExpand = { showMore = it },
+                        onLaunch = { if (movePkg == null) Actions.launchApp(context, it.pkg) },
+                        onMenu = openMenu,
+                    )
+                    LAYOUT_DOCK -> DockArea(
+                        modifier = Modifier.weight(1f).fillMaxWidth(),
+                        sections = sections,
+                        time = time,
+                        date = centerDate,
+                        greeting = greeting,
+                        config = config,
+                        accent = accent,
+                        movePkg = movePkg,
+                        moveFocus = moveFocus,
+                        cardWidth = cardWidth,
+                        gap = gap,
+                        intro = introShown,
+                        expanded = dockExpanded,
+                        onExpandChange = { dockExpanded = it },
+                        onLaunch = { app -> if (movePkg == null) Actions.launchApp(context, app.pkg) },
+                        onMenu = openMenu,
+                    )
+                    else -> {
+                        // Magnetic vertical scroll: the focused row is pinned to a
+                        // fixed pivot just below the status bar, so the row above
+                        // slides off leaving ~15% of its card peeking (like the
+                        // dock's row-1 peek) and the target row drops into place and
+                        // snaps. Same peek at the bottom. The pivot leaves room for
+                        // the section label + a 15%-card sliver above the focused row.
+                        val density = androidx.compose.ui.platform.LocalDensity.current
+                        val cardHeightPx = with(density) { (cardWidth * 9f / 16f).toPx() }
+                        val peekPx = cardHeightPx * 0.15f
+                        val labelPx = with(density) {
+                            if (config.showCategoryNames) 34.dp.toPx() else 0f
+                        }
+                        val pivotPx = peekPx + labelPx
+                        val vPivot = remember(pivotPx) {
+                            object : androidx.compose.foundation.gestures.BringIntoViewSpec {
+                                override fun calculateScrollDistance(
+                                    offset: Float,
+                                    size: Float,
+                                    containerSize: Float,
+                                ): Float = offset - pivotPx
+                            }
+                        }
+                        // Rows crossing the top edge fade out (and back in on the way
+                        // down) instead of being hard-clipped by an invisible wall.
+                        // Kept to the peek sliver so the focused section's label,
+                        // which sits just below it, stays fully readable.
+                        val fadePx = peekPx
+                        // Hoisted out of drawWithContent: rebuilt inside the draw
+                        // lambda it re-allocated a Brush (+ shader) every frame.
+                        val fadeBrush = remember(fadePx) {
+                            Brush.verticalGradient(
+                                colors = listOf(Color.Transparent, Color.Black),
+                                startY = 0f,
+                                endY = fadePx,
+                            )
+                        }
+                        androidx.compose.runtime.CompositionLocalProvider(
+                            androidx.compose.foundation.gestures.LocalBringIntoViewSpec provides vPivot
+                        ) {
+                            LazyColumn(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    // Restore the last-focused card when focus returns
+                                    // (e.g. coming back down from the status bar).
+                                    .focusRestorer()
+                                    .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
+                                    .drawWithContent {
+                                        drawContent()
+                                        drawRect(brush = fadeBrush, blendMode = BlendMode.DstIn)
+                                    },
+                                contentPadding = PaddingValues(
+                                    top = with(density) { pivotPx.toDp() },
+                                    bottom = with(density) { peekPx.toDp() } + 16.dp,
+                                ),
+                                verticalArrangement = Arrangement.spacedBy(18.dp),
+                            ) {
+                        items(sections.size, key = { sections[it].first.id }) { rowIndex ->
+                            val (cat, catApps) = sections[rowIndex]
+                            val isGrid = config.layout == LAYOUT_GRID
+                            // One-shot launch entrance (tied to introShown, so it never
+                            // replays on scroll/navigation): carousel rows slide in from
+                            // alternating sides and decelerate; the grid blooms per-icon
+                            // (inside GridSection). The label fades in after either.
+                            val rowEnter by animateFloatAsState(
+                                targetValue = if (introShown) 1f else 0f,
+                                animationSpec = tween(500, easing = LinearOutSlowInEasing),
+                                label = "rowEnter",
+                            )
+                            val labelAlpha by animateFloatAsState(
+                                targetValue = if (introShown) 1f else 0f,
+                                animationSpec = tween(280, delayMillis = 320),
+                                label = "labelFade",
+                            )
+                            val slideDir = if (rowIndex % 2 == 0) 1f else -1f
+                            Column(
+                                modifier = if (!isGrid) Modifier.graphicsLayer {
+                                    translationX = (1f - rowEnter) * slideDir * size.width
+                                    alpha = rowEnter
+                                } else Modifier
+                            ) {
+                                if (config.showCategoryNames) {
+                                    Text(
+                                        // Quiet uppercase divider, not competing with
+                                        // the icons below it.
+                                        text = cat.name.uppercase(),
+                                        style = MaterialTheme.typography.labelLarge,
+                                        color = Color.White.copy(alpha = 0.6f),
+                                        letterSpacing = 1.5.sp,
+                                        // Both grid and carousel start their content at
+                                        // the 44dp margin, so the label sits above the
+                                        // first icon.
+                                        modifier = Modifier
+                                            .graphicsLayer { alpha = labelAlpha }
+                                            .padding(start = 44.dp, bottom = 10.dp),
+                                    )
+                                }
+                                if (isGrid) {
+                                    GridSection(
+                                        catApps, config, accent, movePkg, moveFocus,
+                                        cardWidth, gap, introShown,
+                                        onLaunch = { app -> if (movePkg == null) Actions.launchApp(context, app.pkg) },
+                                        onMenu = openMenu,
+                                    )
+                                } else {
+                                    CarouselSection(
+                                        catApps, config, accent, movePkg, moveFocus,
+                                        cardWidth, gap,
+                                        onLaunch = { app -> if (movePkg == null) Actions.launchApp(context, app.pkg) },
+                                        onMenu = openMenu,
+                                    )
+                                }
+                            }
+                        }
+                            }
+                        }
+                    }
+                }
+            }
+
+            FocusHintOverlay()
+            // ----- dialogs -----
+            menuFor?.let { app ->
+                AppContextMenu(
+                    app = app,
+                    isHidden = app.pkg in config.hidden,
+                    isInput = com.conreo.couchytv.data.Inputs.isInput(app.pkg),
+                    favoriteLabel = if (v3Enabled && config.layout == com.conreo.couchytv.data.LAYOUT_CINEMA)
+                        (if (visibleFavorites.any { it.pkg == app.pkg }) "Odobrať z obľúbených" else "Pridať medzi obľúbené") else null,
+                    onToggleFavorite = {
+                        menuFor = null
+                        if (visibleFavorites.none { it.pkg == app.pkg } && visibleFavorites.size >= 4) favoriteReplacement = app
+                        else changeFavorite(app)
+                    },
+                    onChangeIcon = {
+                        menuFor = null
+                        scope.launch {
+                            store.update {
+                                it.copy(inputIcons = it.inputIcons + (app.pkg to
+                                    com.conreo.couchytv.data.Inputs.nextIcon(app, it.inputIcons[app.pkg])))
+                            }
+                        }
+                    },
+                    onDismiss = { menuFor = null },
+                    onOpen = { menuFor = null; Actions.launchApp(context, app.pkg) },
+                    onMove = {
+                        menuFor = null
+                        if (config.layout == com.conreo.couchytv.data.LAYOUT_CINEMA &&
+                            "favorites" !in AppRepository.sectionsOf(app, config) &&
+                            !com.conreo.couchytv.data.Inputs.isInput(app.pkg)) showMore = true
+                        movePkg = app.pkg
+                    },
+                    onToggleHide = {
+                        menuFor = null
+                        scope.launch {
+                            store.update {
+                                it.copy(
+                                    hidden = if (app.pkg in it.hidden) it.hidden - app.pkg
+                                    else it.hidden + app.pkg
+                                )
+                            }
+                        }
+                    },
+                    onAppInfo = { menuFor = null; Actions.openAppInfo(context, app.pkg) },
+                    onClose = { menuFor = null; Actions.close(context, app.pkg) },
+                    onUninstall = { menuFor = null; Actions.uninstall(context, app.pkg) },
+                )
+            }
+
+            favoriteReplacement?.let { app ->
+                FavoriteReplacementDialog(app, visibleFavorites,
+                    onPick = { changeFavorite(app, it.pkg) }, onDismiss = { favoriteReplacement = null })
+            }
+
+            if (showInputPicker) {
+                InputPicker(
+                    inputs = inputs.filter { it.pkg !in config.hidden },
+                    onPick = { showInputPicker = false; Actions.launchApp(context, it.pkg) },
+                    onDismiss = { showInputPicker = false },
+                )
+            }
+
+            if (showSettings) {
+                SettingsSheet(
+                    config = config,
+                    apps = apps,
+                    store = store,
+                    onDismiss = { showSettings = false },
+                    onWallpaperChanged = { wallpaperVersion++ },
+                    // Runs on LauncherApp's scope, which survives the dialog
+                    // teardown — otherwise the setupDone write gets cancelled.
+                    onRerunWizard = {
+                        showSettings = false
+                        scope.launch { store.update { it.copy(setupDone = false) } }
+                    },
+                )
+            }
+        }
+    }
+    }
+    }
+    // Fondu: the couch boot logo fades out over the freshly-drawn launcher.
+    // Wait for a real drawn frame (not just first composition) so the fade
+    // begins once the heavy first frame is actually on screen — the breathing
+    // logo covers that hitch instead of fading out through it.
+    var booted by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { withFrameNanos {}; withFrameNanos {}; booted = true }
+    androidx.compose.animation.AnimatedVisibility(
+        visible = !booted,
+        enter = androidx.compose.animation.EnterTransition.None,
+        exit = androidx.compose.animation.fadeOut(tween(500)),
+        modifier = Modifier.fillMaxSize(),
+    ) { LoadingScreen() }
+    }
+}
+
+/* --------------------- carousel: fixed selection --------------------- */
+
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
+@Composable
+private fun CarouselSection(
+    catApps: List<AppEntry>,
+    config: LauncherConfig,
+    accent: Color,
+    movePkg: String?,
+    moveFocus: FocusRequester,
+    cardWidth: Dp,
+    gap: Dp,
+    onLaunch: (AppEntry) -> Unit,
+    onMenu: (AppEntry) -> Unit,
+) {
+    val state = rememberLazyListState()
+    // Pivot scrolling done RIGHT: instead of letting the default
+    // bring-into-view scroll minimally and then re-pinning by hand (two
+    // fighting animations = the janky feel), we replace the scroll spec so
+    // the ONLY scroll that ever happens places the focused card at the
+    // fixed pivot (the 44dp start padding) in one smooth motion.
+    val padPx = with(androidx.compose.ui.platform.LocalDensity.current) { 44.dp.toPx() }
+    val pivotSpec = remember(padPx) {
+        object : androidx.compose.foundation.gestures.BringIntoViewSpec {
+            override fun calculateScrollDistance(
+                offset: Float,
+                size: Float,
+                containerSize: Float,
+            ): Float = offset - padPx
+        }
+    }
+    androidx.compose.runtime.CompositionLocalProvider(
+        androidx.compose.foundation.gestures.LocalBringIntoViewSpec provides pivotSpec
+    ) {
+        LazyRow(
+            state = state,
+            contentPadding = PaddingValues(horizontal = 44.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(gap),
+        ) {
+            items(catApps.size, key = { catApps[it].pkg }) { i ->
+                val app = catApps[i]
+                val moving = app.pkg == movePkg
+                AppCard(
+                    app = app,
+                    isMoving = moving,
+                    isHidden = app.pkg in config.hidden,
+                    accent = accent,
+                    cardWidth = cardWidth,
+                    showLabel = config.showAppLabels,
+                    modifier = if (moving) Modifier.focusRequester(moveFocus) else Modifier,
+                    onLaunch = { onLaunch(app) },
+                    onLongPress = { onMenu(app) },
+                )
+            }
+        }
+    }
+}
+
+/* ------------------- grid: everything on screen ------------------- */
+
+/** Columns are derived from the available width, card size and spacing —
+ *  a row can never overflow, so the last icon is never squeezed. */
+@Composable
+private fun GridSection(
+    catApps: List<AppEntry>,
+    config: LauncherConfig,
+    accent: Color,
+    movePkg: String?,
+    moveFocus: FocusRequester,
+    cardWidth: Dp,
+    gap: Dp,
+    intro: Boolean,
+    onLaunch: (AppEntry) -> Unit,
+    onMenu: (AppEntry) -> Unit,
+) {
+    BoxWithConstraints(
+        Modifier.fillMaxWidth().padding(horizontal = 44.dp, vertical = 8.dp),
+        contentAlignment = Alignment.TopStart,
+    ) {
+        // fitRow only decides how MANY columns fit; the gap is then expanded so the
+        // row fills the width exactly — left margin == right margin (both 44dp) for
+        // any icon size / spacing, and every section lines up column-for-column.
+        val (cols, _) = fitRow(maxWidth, cardWidth, gap)
+        val gapUsed = if (cols > 1) (maxWidth - cardWidth * cols) / (cols - 1) else 0.dp
+        val blockWidth = cardWidth * cols + gapUsed * (cols - 1)
+        val rows = catApps.chunked(cols)
+        // Launch entrance: icons bloom out from the section's centre — the middle
+        // tiles pop first (scale + fade), outer ones stagger by distance. One-shot
+        // via `intro`; sections composed later (scroll) start settled, no replay.
+        val centerR = (rows.size - 1) / 2f
+        val centerC = (cols - 1) / 2f
+        val maxDist = kotlin.math.hypot(centerC.toDouble(), centerR.toDouble())
+            .toFloat().coerceAtLeast(1f)
+        Column(
+            Modifier.width(blockWidth),
+            verticalArrangement = Arrangement.spacedBy(gap),
+        ) {
+            rows.forEachIndexed { r, rowApps ->
+                Row(horizontalArrangement = Arrangement.spacedBy(gapUsed)) {
+                    rowApps.forEachIndexed { c, app ->
+                        val moving = app.pkg == movePkg
+                        val dist = kotlin.math.hypot((c - centerC).toDouble(), (r - centerR).toDouble()).toFloat()
+                        val bloom by animateFloatAsState(
+                            targetValue = if (intro) 1f else 0f,
+                            animationSpec = tween(
+                                durationMillis = 300,
+                                delayMillis = (dist / maxDist * 240f).toInt(),
+                                easing = FastOutSlowInEasing,
+                            ),
+                            label = "bloom",
+                        )
+                        AppCard(
+                            app = app,
+                            isMoving = moving,
+                            isHidden = app.pkg in config.hidden,
+                            accent = accent,
+                            cardWidth = cardWidth,
+                            showLabel = config.showAppLabels,
+                            modifier = (if (moving) Modifier.focusRequester(moveFocus) else Modifier)
+                                .graphicsLayer {
+                                    alpha = bloom
+                                    val s = 0.8f + 0.2f * bloom
+                                    scaleX = s
+                                    scaleY = s
+                                },
+                            onLaunch = { onLaunch(app) },
+                            onLongPress = { onMenu(app) },
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+/* ----- dock: floating glass panel with one row; Down = full grid over blurred bg ----- */
+
+@Composable
+private fun DockArea(
+    modifier: Modifier,
+    sections: List<Pair<CategoryCfg, List<AppEntry>>>,
+    time: String,
+    date: String,
+    greeting: String,
+    config: LauncherConfig,
+    accent: Color,
+    movePkg: String?,
+    moveFocus: FocusRequester,
+    cardWidth: Dp,
+    gap: Dp,
+    intro: Boolean,
+    expanded: Boolean,
+    onExpandChange: (Boolean) -> Unit,
+    onLaunch: (AppEntry) -> Unit,
+    onMenu: (AppEntry) -> Unit,
+) {
+    val dockFocus = remember { FocusRequester() }
+    val gridFocus = remember { FocusRequester() }
+    // Back closes the open grid (returns to the dock); when closed it falls
+    // through to the activity's no-op, so Back never exits the home screen.
+    androidx.activity.compose.BackHandler(enabled = expanded) { onExpandChange(false) }
+    // Which dock column the user pressed Down from, so the grid opens focused on
+    // that column of the 2nd row — pressing Down moves down, not back to icon #1.
+    var expandFromCol by remember { mutableIntStateOf(0) }
+    LaunchedEffect(expanded, intro) {
+        if (!intro) return@LaunchedEffect // wait for the launch entrance
+        // Claim focus over the first few frames (not after a delay): otherwise the
+        // focus, briefly orphaned when the old row's node leaves, snaps to the first
+        // focusable — the status-bar VPN icon — and flashes selected before we grab it.
+        val target = if (expanded) gridFocus else dockFocus
+        repeat(4) {
+            withFrameNanos {}
+            runCatching { target.requestFocus() }
+        }
+    }
+
+    // Size + spacing define how many icons the dock holds; the SAME count
+    // becomes the grid's columns when unfolded, and both states are centered
+    // with the same column math — so icons never shift horizontally.
+    BoxWithConstraints(modifier) {
+        val panelInnerPadding = 18.dp
+        val available = maxWidth - 80.dp - panelInnerPadding * 2
+        val (cols, gapUsed) = fitRow(available, cardWidth, gap)
+        val cardHeight = cardWidth * 9f / 16f
+        // The dock is the first section's first row; unfolding reveals every
+        // section as its own labelled group, with that same row on top.
+        val firstSection = sections.firstOrNull()?.second.orEmpty()
+        val dockRow = firstSection.take(cols)
+        // Teaser under the dock: the next row in reading order.
+        val peekRow = (if (firstSection.size > cols) firstSection.drop(cols)
+        else sections.getOrNull(1)?.second.orEmpty()).take(cols)
+        // The grid opens focused on row 0, same column as the dock icon we came
+        // from (row 0 is those same icons) — focus stays put, it doesn't jump down.
+        val targetCol = expandFromCol.coerceIn(0, (dockRow.size - 1).coerceAtLeast(0))
+        // Fixed block width shared by every row: complete rows are centered,
+        // and a partial LAST row stays left-aligned with the columns above.
+        val blockWidth = cardWidth * cols + gapUsed * (cols - 1)
+        val peekH = cardHeight * 0.22f
+        // Distance between the grid's row-0 spot (top, 24dp pad) and the dock's
+        // row-0 spot (bottom): the grid slides straight out of / back into the
+        // dock icons, so the same icons read as one set rising and sinking.
+        val labelH = if (config.showAppLabels) CardLabelHeight else 0.dp
+        val sectionLabelH = if (config.showCategoryNames) 34.dp else 0.dp
+        val dockRisePx = with(androidx.compose.ui.platform.LocalDensity.current) {
+            (maxHeight - peekH - cardHeight - labelH - sectionLabelH - 52.dp).toPx()
+        }.toInt().coerceAtLeast(0)
+        // Row spacing morphs from a wide "dock" gap down to the tight grid gap as
+        // it opens (rows start far apart, like the dock, then draw together), and
+        // back out on close.
+        val rowGap by animateDpAsState(
+            targetValue = if (expanded) gap else gap + cardHeight * 0.35f,
+            animationSpec = tween(340, easing = FastOutSlowInEasing),
+            label = "rowGap",
+        )
+
+        Column(Modifier.fillMaxSize()) {
+            // Centerpiece: greeting, big clock and date fill the space above the dock.
+            Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+                androidx.compose.animation.AnimatedVisibility(
+                    visible = intro && !expanded,
+                    enter = fadeIn(tween(300)),
+                    exit = fadeOut(tween(150)),
+                ) {
+                    HomeClock(time = time, date = date, greeting = greeting)
+                }
+            }
+            // Glass panel + row-0 icons, DISSOCIATED so they animate apart: the
+            // frosted panel slides DOWN and fades out; the icons fade and drift
+            // UP (toward the grid), while the grid rises them into position.
+            Box(
+                Modifier.fillMaxWidth().padding(bottom = 10.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                DockGlassPanel(
+                    visible = intro && !expanded,
+                    rowApps = dockRow,
+                    focusCol = targetCol,
+                    config = config,
+                    accent = accent,
+                    movePkg = movePkg,
+                    moveFocus = moveFocus,
+                    dockFocus = dockFocus,
+                    cardWidth = cardWidth,
+                    gapUsed = gapUsed,
+                    innerPadding = panelInnerPadding,
+                    onExpandFrom = { i -> expandFromCol = i; onExpandChange(true) },
+                    onLaunch = onLaunch,
+                    onMenu = onMenu,
+                )
+            }
+            // Teaser: the tops of the 2nd row's cards peeking at the bottom edge.
+            // Fades in in SYNC with the dock icons (same delay), so the peek never
+            // appears before row 0 on collapse.
+            AnimatedVisibility(
+                visible = intro && !expanded && peekRow.isNotEmpty(),
+                enter = fadeIn(tween(200, delayMillis = 220)),
+                exit = fadeOut(tween(200)),
+            ) {
+                Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(gapUsed)) {
+                        peekRow.forEach { app ->
+                            PeekStrip(app, cardWidth, cardHeight, peekH)
+                        }
+                    }
+                }
+            }
+        }
+
+        AnimatedVisibility(
+            visible = expanded,
+            // The grid slides straight out of the dock (row 0 aligned with the
+            // dock icons) and sinks back into it — one continuous set of icons,
+            // ease-in-out (S-curve). Fades in fast so it covers the dock row
+            // cleanly instead of double-exposing.
+            enter = fadeIn(tween(150)) +
+                slideInVertically(tween(340, easing = FastOutSlowInEasing)) { dockRisePx },
+            // Closing: sink back into the dock (S-curve) and only fade out at the
+            // very end, so the grid stays solid the whole way down.
+            exit = fadeOut(tween(120, delayMillis = 240)) +
+                slideOutVertically(tween(340, easing = FastOutSlowInEasing)) { dockRisePx },
+            modifier = Modifier.fillMaxSize(),
+        ) {
+            // Panel is gone; every section's icons over the blurred wallpaper, same
+            // column count and centering as the dock. Up from the first row restores
+            // the dock; a second Up reaches the status bar.
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(vertical = 24.dp),
+                verticalArrangement = Arrangement.spacedBy(18.dp),
+            ) {
+                items(sections.size, key = { sections[it].first.id }) { sIndex ->
+                    val (cat, catApps) = sections[sIndex]
+                    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
+                        Column(Modifier.width(blockWidth)) {
+                            if (config.showCategoryNames) {
+                                Text(
+                                    text = cat.name.uppercase(),
+                                    style = MaterialTheme.typography.labelLarge,
+                                    color = Color.White.copy(alpha = 0.6f),
+                                    letterSpacing = 1.5.sp,
+                                    modifier = Modifier.padding(bottom = 10.dp),
+                                )
+                            }
+                            Column(verticalArrangement = Arrangement.spacedBy(rowGap)) {
+                                catApps.chunked(cols).forEachIndexed { r, rowApps ->
+                                    Row(horizontalArrangement = Arrangement.spacedBy(gapUsed)) {
+                                        rowApps.forEachIndexed { c, app ->
+                                            val moving = app.pkg == movePkg
+                                            val topRow = sIndex == 0 && r == 0
+                                            AppCard(
+                                                app = app,
+                                                isMoving = moving,
+                                                isHidden = app.pkg in config.hidden,
+                                                accent = accent,
+                                                cardWidth = cardWidth,
+                                                showLabel = config.showAppLabels,
+                                                modifier = (when {
+                                                    moving -> Modifier.focusRequester(moveFocus)
+                                                    topRow && c == targetCol -> Modifier.focusRequester(gridFocus)
+                                                    else -> Modifier
+                                                }).then(
+                                                    if (topRow) Modifier.onPreviewKeyEvent { e ->
+                                                        if (movePkg == null &&
+                                                            e.type == KeyEventType.KeyDown &&
+                                                            e.key == Key.DirectionUp
+                                                        ) { expandFromCol = c; onExpandChange(false); true } else false
+                                                    } else Modifier
+                                                ),
+                                                onLaunch = { onLaunch(app) },
+                                                onLongPress = { onMenu(app) },
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * The dock's frosted-glass panel with its row-0 icons — DISSOCIATED so they
+ * animate independently on expand: the frosted background slides DOWN and fades
+ * out fast, while the icons fade and drift UP as the grid rises them into place.
+ * Kept in its own (non-Column) composable so AnimatedVisibility resolves to the
+ * plain overload, and so LocalCornerRadius updates the corners live.
+ */
+@Composable
+private fun DockGlassPanel(
+    visible: Boolean,
+    rowApps: List<AppEntry>,
+    config: LauncherConfig,
+    accent: Color,
+    movePkg: String?,
+    moveFocus: FocusRequester,
+    dockFocus: FocusRequester,
+    focusCol: Int,
+    cardWidth: Dp,
+    gapUsed: Dp,
+    innerPadding: Dp,
+    onExpandFrom: (Int) -> Unit,
+    onLaunch: (AppEntry) -> Unit,
+    onMenu: (AppEntry) -> Unit,
+) {
+    Box(contentAlignment = Alignment.Center) {
+        // Frosted background — its exit is the exact mirror of its enter: rises
+        // up + fades in on close, sinks down + fades out on open (same 300ms fade
+        // / 500ms S-curve slide, just reversed).
+        AnimatedVisibility(
+            visible = visible,
+            enter = fadeIn(tween(300)) +
+                slideInVertically(tween(340, easing = FastOutSlowInEasing)) { it },
+            exit = fadeOut(tween(300)) +
+                slideOutVertically(tween(340, easing = FastOutSlowInEasing)) { it },
+            modifier = Modifier.matchParentSize(),
+        ) {
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .clip(SmoothCornerShape(LocalCornerRadius.current + 14.dp))
+                    .background(Color(0xB3121418))
+                    .background(Color.White.copy(alpha = 0.06f))
+            )
+        }
+        // Icons — on OPEN they vanish almost instantly (the rising grid takes
+        // over); on CLOSE they wait for the grid to sink back before fading in.
+        AnimatedVisibility(
+            visible = visible,
+            enter = fadeIn(tween(200, delayMillis = 220)),
+            exit = fadeOut(tween(90)),
+        ) {
+            Row(
+                Modifier.padding(innerPadding),
+                horizontalArrangement = Arrangement.spacedBy(gapUsed),
+            ) {
+                rowApps.forEachIndexed { i, app ->
+                    val moving = app.pkg == movePkg
+                    AppCard(
+                        app = app,
+                        isMoving = moving,
+                        isHidden = app.pkg in config.hidden,
+                        accent = accent,
+                        cardWidth = cardWidth,
+                        showLabel = config.showAppLabels,
+                        modifier = (when {
+                            moving -> Modifier.focusRequester(moveFocus)
+                            i == focusCol -> Modifier.focusRequester(dockFocus)
+                            else -> Modifier
+                        }).onPreviewKeyEvent { e ->
+                            if (movePkg == null &&
+                                e.type == KeyEventType.KeyDown &&
+                                e.key == Key.DirectionDown
+                            ) { onExpandFrom(i); true } else false
+                        },
+                        onLaunch = { onLaunch(app) },
+                        onLongPress = { onMenu(app) },
+                    )
+                }
+            }
+        }
+    }
+}
+
+/** Greeting, large clock and date — the dock home's centerpiece. */
+@Composable
+private fun HomeClock(time: String, date: String, greeting: String) {
+    val shadow = androidx.compose.ui.graphics.Shadow(
+        Color.Black.copy(alpha = 0.45f), blurRadius = 16f,
+    )
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(
+            text = greeting,
+            style = MaterialTheme.typography.headlineMedium.copy(shadow = shadow),
+            color = Color.White.copy(alpha = 0.8f),
+        )
+        Text(
+            // Tabular figures keep the digits from jittering as the minutes change.
+            text = time,
+            style = MaterialTheme.typography.displayLarge.copy(
+                fontSize = 120.sp,
+                lineHeight = 132.sp,
+                fontFeatureSettings = "tnum",
+                shadow = shadow,
+            ),
+            color = Color.White,
+        )
+        Text(
+            text = date,
+            style = MaterialTheme.typography.headlineSmall.copy(shadow = shadow),
+            color = Color.White.copy(alpha = 0.8f),
+        )
+    }
+}
+
+/**
+ * One second-row peek strip: the top slice of a card. It's its OWN composable
+ * (not inline) so reading LocalCornerRadius here gives it an independent
+ * recomposition scope — roundness changes update it live, exactly like AppCard.
+ */
+@Composable
+private fun PeekStrip(app: AppEntry, cardWidth: Dp, cardHeight: Dp, peekH: Dp) {
+    val corner = LocalCornerRadius.current
+    Box(
+        Modifier
+            .width(cardWidth)
+            .height(peekH)
+            .clip(RoundedCornerShape(topStart = corner, topEnd = corner))
+            .background(app.tile),
+    ) {
+        if (app.banner != null) {
+            Image(
+                bitmap = app.banner,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                alignment = Alignment.TopCenter,
+                // full card height, parent clips to peekH → only the top slice shows.
+                modifier = Modifier.width(cardWidth).height(cardHeight),
+            )
+        }
+    }
+}
+
+/** Shared HTTP client with the platform TLS certificate checks. */
+private val wallpaperHttpClient: okhttp3.OkHttpClient by lazy {
+    okhttp3.OkHttpClient.Builder()
+        .connectTimeout(20, java.util.concurrent.TimeUnit.SECONDS)
+        .readTimeout(20, java.util.concurrent.TimeUnit.SECONDS)
+        .build()
+}
+
+/**
+ * Live video wallpaper behind the launcher, muted, aspect-filled, via ExoPlayer.
+ * [loop] true replays the same clip (a user's own single video); false plays it
+ * once then calls [onEnded] so aerials shuffle to the next. Releases the decoder
+ * while the launcher is hidden and rebuilds it on return.
+ */
+@androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
+@Composable
+private fun VideoWallpaper(
+    uri: String,
+    speed: Float = 1f,
+    loop: Boolean = true,
+    coverBrush: Brush,
+    onEnded: () -> Unit = {},
+    onError: () -> Unit = {},
+) {
+    val context = LocalContext.current
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+
+    val returnCover by produceState<android.graphics.Bitmap?>(null, uri) {
+        value = null
+        value = withContext(Dispatchers.IO) {
+            runCatching {
+                val name = android.net.Uri.parse(uri).lastPathSegment.orEmpty()
+                if (uri.startsWith("asset:")) context.assets.open("thumbnails/${name.removeSuffix(".mp4")}.jpg")
+                    .use { BitmapFactory.decodeStream(it) }
+                else if (uri.startsWith("file:")) decodeDownsampled(File(com.conreo.couchytv.WallpaperLibrary.folder(context), "$name.jpg"), 960)
+                else null
+            }.getOrNull()
+        }
+    }
+
+    // Slow fondu: a clip is hidden until its FIRST FRAME is actually rendered
+    // (i.e. buffered enough to show), then fades up. On a source change the old
+    // clip fades out first, so rotations are a symmetric fade out → in instead
+    // of a hard cut or a half-buffered pop.
+    val alpha = remember { androidx.compose.animation.core.Animatable(0f) }
+    var firstFrameGen by remember { mutableIntStateOf(0) }
+
+    // The ExoPlayer — and its hardware video decoder, surface and buffers — is
+    // built on RESUME and released on PAUSE, before another app or dream needs
+    // the scarce 4K decoder. Holding it for a wallpaper nobody's
+    // watching while another app is foreground is the launcher's biggest
+    // background cost and a needless kill risk; the grid stays warm from cache and
+    // the clip re-prepares in a few hundred ms on return. A released decoder also
+    // can't churn into a false stall while the SurfaceView has no surface.
+    var player by remember { mutableStateOf<androidx.media3.exoplayer.ExoPlayer?>(null) }
+    DisposableEffect(lifecycleOwner) {
+        fun build(): androidx.media3.exoplayer.ExoPlayer {
+            val renderers = androidx.media3.exoplayer.DefaultRenderersFactory(context)
+                .setEnableDecoderFallback(true) // fall back to SW decoder on odd clips
+            val http = androidx.media3.datasource.okhttp.OkHttpDataSource.Factory(wallpaperHttpClient)
+            val dataSource = androidx.media3.datasource.DefaultDataSource.Factory(context, http)
+            val sourceFactory = androidx.media3.exoplayer.source.DefaultMediaSourceFactory(dataSource)
+            return androidx.media3.exoplayer.ExoPlayer.Builder(context)
+                .setRenderersFactory(renderers)
+                .setMediaSourceFactory(sourceFactory)
+                // A muted, non-interactive wallpaper never seeks, so the default
+                // 50s buffer just pins ~25-30MB of RAM. Trim it — but keep >=15s
+                // max so a slow TV network doesn't rebuffer visibly on the loop.
+                .setLoadControl(
+                    androidx.media3.exoplayer.DefaultLoadControl.Builder()
+                        .setBufferDurationsMs(10_000, 15_000, 2_500, 5_000)
+                        .setPrioritizeTimeOverSizeThresholds(true)
+                        .build()
+                )
+                .build().apply {
+                    // This is a wallpaper behind animated UI. A 30fps surface vote
+                    // throttles the entire launcher UID to 30Hz on this TCL.
+                    setVideoChangeFrameRateStrategy(androidx.media3.common.C.VIDEO_CHANGE_FRAME_RATE_STRATEGY_OFF)
+                    repeatMode = if (loop) androidx.media3.common.Player.REPEAT_MODE_ONE
+                        else androidx.media3.common.Player.REPEAT_MODE_OFF
+                    volume = 0f
+                    videoScalingMode =
+                        androidx.media3.common.C.VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING
+                    playWhenReady = true
+                    setPlaybackSpeed(speed)
+                }
+        }
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            when (event) {
+                androidx.lifecycle.Lifecycle.Event.ON_RESUME ->
+                    if (player == null) player = build()
+                androidx.lifecycle.Lifecycle.Event.ON_PAUSE -> {
+                    if (!com.conreo.couchytv.Experience.systemPanel) {
+                        player?.let { runCatching { it.release() } }
+                        player = null
+                    }
+                }
+                androidx.lifecycle.Lifecycle.Event.ON_STOP -> {
+                    player?.let { runCatching { it.release() } }; player = null
+                }
+                else -> {}
+            }
+        }
+        // Already visible when we enter composition (first launch, config change) →
+        // build now instead of waiting for the next ON_START.
+        if (player == null &&
+            lifecycleOwner.lifecycle.currentState
+                .isAtLeast(androidx.lifecycle.Lifecycle.State.RESUMED)
+        ) {
+            player = build()
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            player?.let { runCatching { it.release() } }
+            player = null
+        }
+    }
+
+    // On release the cover is snapped back opaque so the NEXT visible state shows
+    // the gradient (not a black hole) until the rebuilt player renders its frame.
+    LaunchedEffect(player == null) { if (player == null) alpha.snapTo(0f) }
+    LaunchedEffect(player, speed) { player?.setPlaybackSpeed(speed) }
+
+    var retryCount by remember(player, uri) { mutableIntStateOf(0) }
+    DisposableEffect(player, uri) {
+        val p = player ?: return@DisposableEffect onDispose { }
+        val listener = object : androidx.media3.common.Player.Listener {
+            override fun onRenderedFirstFrame() {
+                firstFrameGen++
+                android.util.Log.i("CouchyWallpaper", "Rendered $uri ${p.videoSize.width}x${p.videoSize.height}")
+            }
+            override fun onPlaybackStateChanged(state: Int) {
+                // Clip finished (loop off) → advance to the next aerial.
+                if (state == androidx.media3.common.Player.STATE_ENDED) onEnded()
+            }
+            override fun onPositionDiscontinuity(
+                oldPosition: androidx.media3.common.Player.PositionInfo,
+                newPosition: androidx.media3.common.Player.PositionInfo,
+                reason: Int,
+            ) {
+                if (loop && reason == androidx.media3.common.Player.DISCONTINUITY_REASON_AUTO_TRANSITION) {
+                    android.util.Log.i("CouchyWallpaper", "Looped $uri")
+                }
+            }
+            override fun onPlayerError(error: androidx.media3.common.PlaybackException) {
+                com.conreo.couchytv.RuntimeHealth.mediaFailure("Pozadie: ${error.errorCodeName}")
+                android.util.Log.w("LiteTV", "wallpaper play error ${error.errorCodeName}: $uri")
+                if (retryCount < 2) retryCount++ else onError()
+            }
+        }
+        p.addListener(listener)
+        onDispose { p.removeListener(listener) }
+    }
+    // Load (or reload, after a rebuild on return) the current clip. Keyed on the
+    // player too, so coming back from the background re-prepares on the fresh one.
+    LaunchedEffect(player, uri, retryCount) {
+        val p = player ?: return@LaunchedEffect
+        if (retryCount > 0) delay(350)
+        // Fade the current clip out before swapping (skipped on the first load, or
+        // right after a rebuild, when the cover is already up).
+        if (alpha.value > 0f) alpha.animateTo(0f, tween(450))
+        val genBefore = firstFrameGen
+        runCatching {
+            p.setMediaItem(androidx.media3.common.MediaItem.fromUri(uri))
+            p.prepare()
+        }
+        // Stall watchdog: if no frame has rendered in 2.5s (a dead/unreachable
+        // stream), skip to the next clip instead of sitting on the cover. Cancelled
+        // automatically when the uri (or player) changes.
+        delay(2_500L)
+        // Only a real stall counts. While the app isn't RESUMED the SurfaceView may
+        // have no surface, so NO clip can render — tripping here would falsely flag
+        // an error and drop to the gradient. Skip unless resumed.
+        val resumed = lifecycleOwner.lifecycle.currentState
+            .isAtLeast(androidx.lifecycle.Lifecycle.State.RESUMED)
+        if (firstFrameGen == genBefore && resumed) {
+            android.util.Log.w("LiteTV", "wallpaper stalled (no frame in 2.5s), skipping: $uri")
+            if (retryCount < 2) retryCount++ else onError()
+        }
+    }
+    // The new clip's first frame is on screen → fade it in slowly.
+    LaunchedEffect(firstFrameGen) {
+        if (firstFrameGen > 0) alpha.animateTo(1f, tween(1100))
+    }
+    // SurfaceView, NOT TextureView: it's composited by the system (SurfaceFlinger)
+    // on its own thread, so the video never stutters when the UI thread is busy
+    // (grid scroll, focus animations) — a TextureView composites on the UI thread
+    // and freezes under load. It shows through the transparent window (see
+    // MainActivity.setBackgroundDrawable(null)). A SurfaceView can't alpha-blend,
+    // so the clip fade is a black cover on top instead: opaque when nothing is
+    // shown yet, clear once the frame is up.
+    Box(Modifier.fillMaxSize()) {
+        androidx.compose.ui.viewinterop.AndroidView(
+            modifier = Modifier.fillMaxSize(),
+            factory = { ctx -> android.view.SurfaceView(ctx) },
+            // Bind the surface to whichever player is current. Re-runs when the
+            // player is rebuilt on return (the old, released one needs no cleanup);
+            // a no-op when it's null after release.
+            update = { view -> player?.setVideoSurfaceView(view) },
+        )
+        Box(Modifier.fillMaxSize().graphicsLayer { this.alpha = 1f - alpha.value }) {
+            val cover = returnCover
+            if (cover != null) Image(cover.asImageBitmap(), null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+            else Box(Modifier.fillMaxSize().background(coverBrush))
+        }
+    }
+}
+
+/** Sober startup screen: dark backdrop + a minimal spinning arc, nothing else. */
+@Composable
+private fun LoadingScreen() {
+    Box(
+        Modifier.fillMaxSize().background(Color(0xFF101216)),
+        contentAlignment = Alignment.Center,
+    ) {
+        // The couch logo, gently breathing, instead of a generic spinner.
+        val transition = rememberInfiniteTransition(label = "load")
+        val scale by transition.animateFloat(
+            initialValue = 0.9f,
+            targetValue = 1.06f,
+            animationSpec = infiniteRepeatable(
+                tween(950, easing = androidx.compose.animation.core.FastOutSlowInEasing),
+                androidx.compose.animation.core.RepeatMode.Reverse,
+            ),
+            label = "pulse",
+        )
+        Image(
+            painter = androidx.compose.ui.res.painterResource(com.conreo.couchytv.R.drawable.ic_couch),
+            contentDescription = null,
+            modifier = Modifier
+                .size(88.dp)
+                .graphicsLayer { scaleX = scale; scaleY = scale },
+        )
+    }
+}
+
+/** Decodes a bitmap with an inSampleSize so its width stays near [maxWidth]. */
+private fun decodeDownsampled(file: File, maxWidth: Int): android.graphics.Bitmap? {
+    val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+    BitmapFactory.decodeFile(file.absolutePath, bounds)
+    if (bounds.outWidth <= 0) return null
+    var sample = 1
+    while (bounds.outWidth / (sample * 2) >= maxWidth) sample *= 2
+    val opts = BitmapFactory.Options().apply {
+        inSampleSize = sample
+        inPreferredConfig = android.graphics.Bitmap.Config.RGB_565
+    }
+    return BitmapFactory.decodeFile(file.absolutePath, opts)
+}

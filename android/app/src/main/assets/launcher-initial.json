@@ -1,0 +1,13 @@
+{
+  "setupDone": false,
+  "videoUri": "asset:///wallpapers/Aurora.mp4",
+  "showVpnButton": false,
+  "h24": true,
+  "useBuiltinAerials": false,
+  "iconScale": 2,
+  "layout": 1,
+  "spacing": 1,
+  "dateFormat": 3,
+  "useVideoWallpaper": true,
+  "scrimMode": 0
+}

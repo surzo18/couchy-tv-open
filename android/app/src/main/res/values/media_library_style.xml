@@ -1,0 +1,11 @@
+<resources>
+    <style name="MediaLibraryDialog" parent="android:style/Theme.Material.Dialog.Alert">
+        <item name="android:colorAccent">#A8D8FF</item>
+        <item name="android:colorControlHighlight">#365171</item>
+        <item name="android:colorBackground">#152233</item>
+        <item name="android:windowBackground">@drawable/media_library_panel</item>
+        <item name="android:textColorPrimary">#F2F6FC</item>
+        <item name="android:textColorSecondary">#BDCCDF</item>
+        <item name="android:backgroundDimAmount">0.55</item>
+    </style>
+</resources>
