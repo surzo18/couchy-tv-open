@@ -32,8 +32,8 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 
-private const val ACTIVE_ALBUM="Pictures/Couchy-Album/"
-private const val HIDDEN_ALBUM="Pictures/Couchy-Hidden/"
+private val ACTIVE_ALBUM get()=EditionConfig.albumActive
+private val HIDDEN_ALBUM get()=EditionConfig.albumHidden
 data class AlbumPhoto(val uri:Uri,val name:String,val active:Boolean,val date:String="",val video:Boolean=false)
 fun albumPhotos(c:Context):List<AlbumPhoto> {
     val result=mutableListOf<AlbumPhoto>()

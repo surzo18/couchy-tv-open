@@ -27,4 +27,10 @@ The onboarding script **clears this public app's data on the selected emulator**
 Audit the actual signed APK and inspect its certificate. Capture documentation images from this public build only. Confirm the media manifest, legal notices, no personal data/secrets, all relative documentation links and the release source tag. See [RELEASE.md](../RELEASE.md).
 
 ## Known validation limits
-No representative physical-device performance minimum has been established. HDMI/CEC, vendor panels, system Home keys and third-party media sessions need real-device checks. The public edition is tested without a personal Jellyfin account; automated cases cover parsing/navigation policy, not every server or browser. Weather and schedule availability depend on external services. English localization is partial.
+No representative physical-device performance minimum has been established. HDMI/CEC, vendor panels, system Home keys and third-party media sessions need real-device checks. The public edition is tested without a personal Jellyfin account; automated cases cover parsing/navigation policy, not every server or browser. Weather and schedule availability depend on external services. Localization tests cover static labels and numeric templates, including Android regex behavior; provider content and user metadata are not translated.
+
+## Dependency maintenance
+
+Version 1.2.0 retains the validated Gradle 8.9 / AGP 8.5.2 / Kotlin 2.0.20 / API 34 toolchain. Kotlin plugins are grouped so that compiler, Compose and serialization updates can be reviewed together. CI action updates are grouped, pinned to full commit hashes, and tested before merging. Security alerts remain enabled.
+
+The release review incorporated graphics-shapes 1.1.0 and refreshed Python, artifact, emulator and CodeQL actions. Standalone proposals for AGP 9.5.1, Compose BOM 2026.09.00 and Kotlin Compose 2.4.21 failed CI: they respectively require newer Gradle, API 37, and migration to the compilerOptions DSL. Gradle 9.9.1 passed its individual checks but was deferred to a coordinated toolchain migration rather than changing the release baseline in isolation. These are deferred maintenance upgrades, not fixes required to install 1.2.0. Future updates must rerun the release checks for both editions.

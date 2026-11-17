@@ -10,7 +10,7 @@ import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 
-class CouchyApplication:Application(){override fun onCreate(){super.onCreate();DiagnosticLog.init(this); AppLanguage.load(this); NewsSources.load(this)}}
+class CouchyApplication:Application(){override fun onCreate(){super.onCreate();EditionConfig.load(this);PremiereSources.load(this);DiagnosticLog.init(this); AppLanguage.load(this); NewsSources.load(this)}}
 data class DiagnosticEvent(val at:Long,val area:String,val level:String,val message:String,val detail:String="")
 
 /** App-owned diagnostics only. No URLs, credentials, article titles, or media metadata. */

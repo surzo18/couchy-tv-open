@@ -42,7 +42,7 @@ class ScooterView(context:Context,val game:ScooterGame,val pause:()->Unit,val pr
     }
     override fun onKeyUp(code:Int,event:KeyEvent):Boolean=when(code){KeyEvent.KEYCODE_DPAD_LEFT->{game.brake=false;true};KeyEvent.KEYCODE_DPAD_RIGHT->{game.boost=false;true};KeyEvent.KEYCODE_DPAD_UP,KeyEvent.KEYCODE_DPAD_DOWN->true;else->super.onKeyUp(code,event)}
     private fun box(c:Canvas,x:Float,y:Float,w:Float,h:Float,color:Int,r:Float=0f){p.color=color;p.shader=null;p.style=Paint.Style.FILL;rect.set(x,y,x+w,y+h);c.drawRoundRect(rect,r,r,p)}
-    private fun text(c:Canvas,s:String,x:Float,y:Float,size:Float,color:Int=0xFFF1F5EF.toInt(),strong:Boolean=false){p.color=color;p.shader=null;p.typeface=if(strong)bold else font;p.textSize=size;c.drawText(s,x,y,p)}
+    private fun text(c:Canvas,s:String,x:Float,y:Float,size:Float,color:Int=0xFFF1F5EF.toInt(),strong:Boolean=false){p.color=color;p.shader=null;p.typeface=if(strong)bold else font;p.textSize=size;c.drawText(com.conreo.couchytv.AppLanguage.text(s),x,y,p)}
     override fun onDraw(c:Canvas){super.onDraw(c);c.save();c.scale(width/1920f,height/1080f)
         p.shader=sky[game.biome];c.drawRect(0f,0f,1920f,1080f,p);p.shader=null
         val camera=game.x-450f

@@ -1,8 +1,8 @@
 # Gallery and provenance
 
-Unedited Android emulator screenshots captured from the public edition. Backgrounds are the project's original procedural Aurora, Ocean and Ember loops. Game artwork is drawn by the included source. No personal photos, third-party soundtrack artwork or movie posters are used. Empty libraries reflect a new installation; screenshots do not imply that media or accounts are bundled.
+Unedited Android emulator screenshots captured from the public edition. Backgrounds are the project's original procedural Aurora, Ocean and Ember loops. Game artwork is drawn by the included source. No personal photos, third-party soundtrack artwork or movie posters are used. The home views show actual installed applications on the emulator. These apps and accounts are not bundled. Media libraries start empty apart from the three included backgrounds.
 
-The interface is partly localized to English. System metrics are emulator measurements, not hardware requirements. Capture hashes and origin descriptions are listed in `screenshots/manifest.json`; new captures need a human privacy/content review. Application interface licensing and third-party icon/font attribution remain as described in [the notices](../THIRD-PARTY-NOTICES.md).
+The captures use the English interface. System metrics are emulator measurements, not hardware requirements. Capture hashes and origin descriptions are listed in `screenshots/manifest.json`; new captures need a human privacy/content review. Application interface licensing and third-party icon/font attribution remain as described in [the notices](../THIRD-PARTY-NOTICES.md).
 
 | Aurora | Ember |
 |---|---|
@@ -15,3 +15,11 @@ The interface is partly localized to English. System metrics are emulator measur
 | ![Road crossing menu](screenshots/crossing.png) | ![Road crossing](screenshots/crossing-play.png) |
 
 More settings screenshots are in the [README gallery](../README.md#gallery).
+
+## More configuration screens
+
+| Appearance | Jellyfin connection |
+|---|---|
+| ![Appearance settings](screenshots/appearance.png) | ![Jellyfin connection](screenshots/jellyfin.png) |
+
+![Album and screensaver settings](screenshots/albums.png)

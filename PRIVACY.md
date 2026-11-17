@@ -12,8 +12,9 @@ stored on the TV. This does not mean optional online providers receive no data.
 - Weather: off by default. City search and forecasts contact Open-Meteo and
   disclose the query/selected coordinates and IP address. This edition does not
   automatically contact an IP geolocation service.
-- New seasons: opening the panel contacts TVmaze for US schedule entries within
-  three days before/after today. Posters are loaded from its image CDN.
+- New releases: disabled until you select sources. Opening the panel then contacts
+  the selected TVmaze API or optional TVmaze/ITAFILM/CINEMAX web adapters and
+  their image hosts. Each receives your IP address and normal request metadata.
 - Jellyfin: only the server you configure is contacted. Its access token is
   stored in app-private preferences and excluded from cloud/device backups.
   Redirects are not followed for authenticated requests. Use HTTPS; HTTP sends

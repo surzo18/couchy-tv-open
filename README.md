@@ -13,19 +13,19 @@ This independently maintained edition builds on [Couchy Launcher](https://github
 | Area | Features |
 |---|---|
 | Home | Reorder favorites, open installed apps and available HDMI inputs, return to the previous app, use an uncluttered idle view. |
-| Wallpapers | Import video, edit names and categories, shuffle eligible backgrounds or keep the last one on wake, match accent colors. |
+| Wallpapers | Import video, edit names and categories, shuffle eligible backgrounds or keep the last one on wake, match accent colors, or enable gentle two-minute automatic changes. |
 | Music | Import your audio, edit metadata, assign shuffled tracks to backgrounds, fade track edges, control compatible external players. |
 | Jellyfin | Quick Connect, reconnect in the UI, continue watching, next episodes, random picks and favorites, season/episode navigation. Playback opens the Jellyfin TV client. |
 | News | Add your own HTTPS RSS/Atom feeds; source colors, filtering, summaries, pictures when provided and a shuffled ticker. No feeds enabled initially. |
 | Weather | Choose a city, see daily and hourly conditions, switch units or hide the widget. Open-Meteo service conditions apply. |
-| New series | TVmaze season premieres around today, descriptions, available ratings and external trailer search. US-oriented seven-day schedule; **not a comprehensive cinema catalog**. |
+| New releases | Choose optional series and cinema sources, then browse dates, artwork, descriptions, available ratings and trailer links. All sources start disabled; coverage and provider terms vary. |
 | Memories | Import photos/video, organize albums, edit captions, select screensaver albums and enable occasional memory cards. No personal albums included. |
 | Games | Road crossing and side-view scooter games with local progress, unlocks, challenges, increasing difficulty and original synthesized sound effects. |
 | Setup and help | Eight-step onboarding, Slovak/basic English, topic-based help, settings, bounded diagnostics and offline license notices. |
 
 ## Gallery
 
-These are actual emulator captures of this public edition, using only its original demo media. There are no personal account credentials or downloaded movie/anime artworks in the gallery. Some screens retain Slovak text: English support is currently partial.
+These are actual emulator captures of this public edition, using only its original demo media. There are no personal account credentials or downloaded movie/anime artworks in the gallery. Installed-app icons identify actual apps on the test device; those apps are not included in this project.
 
 | Wallpaper library | System settings |
 |---|---|
@@ -55,12 +55,12 @@ See [the gallery and screenshot provenance](docs/GALLERY.md) for more background
 
 HDMI names and input switching, Home remapping, picture/sound shortcuts and external playback controls depend on the TV and other apps. A streaming box may not expose the television's HDMI ports. **Keep the original system launcher enabled.**
 
-The UI supports Slovak and basic English; some game text and dynamic messages remain Slovak. Service content is not automatically translated. Weather has an integrated provider, not a general provider plug-in editor. There is no remote administration website.
+The UI supports Slovak and English, including game menus and dynamic counts. User titles and provider content retain their original language. Service content is not automatically translated. Weather has an integrated provider, not a general provider plug-in editor. There is no remote administration website.
 
 ## Install
 
 1. Download the signed APK and checksums from [Releases](https://github.com/surzo18/couchy-tv-open/releases). See [release verification](RELEASE.md).
-2. Sideload through your preferred installer, or run `adb -s YOUR_DEVICE install -r Couchy-TV-Open-1.0.0.apk`. Use an explicit device identifier.
+2. Sideload through your preferred installer, or run `adb -s YOUR_DEVICE install -r Couchy-TV-Open-1.2.0.apk`. Use an explicit device identifier.
 3. Open **Couchy TV Open** and finish the wizard. Optional steps can be skipped. Choose a city and your own feeds/media only if wanted.
 4. Enable the optional Home accessibility service or select the default Home app where the TV supports it. Notification access is optional for external-player controls.
 

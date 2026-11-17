@@ -4,6 +4,12 @@ import android.content.Context
 
 /** A process session keeps its wallpaper on app returns; SCREEN_ON advances it. */
 object WallpaperCycle {
+    const val AUTO_INTERVAL_MS = 120_000L
+    fun autoRotate(context: Context) = context.getSharedPreferences("wallpaper_cycle", 0).getBoolean("autoRotate", true)
+    fun setAutoRotate(context: Context, enabled: Boolean) {
+        context.getSharedPreferences("wallpaper_cycle", 0).edit().putBoolean("autoRotate", enabled).apply()
+        Experience.changed()
+    }
     private var current: String? = null
     private var lastScreenOn = 0L
     fun randomAtWake(context: Context) = context.getSharedPreferences("wallpaper_cycle", 0).getBoolean("randomAtWake", true)
@@ -29,7 +35,7 @@ object WallpaperCycle {
         val remaining = prefs.getStringSet("remaining", emptySet()).orEmpty().intersect(choices.toSet())
         val pool = remaining.ifEmpty { choices.toSet() }
         val candidates = pool.filter { it != previous }.ifEmpty { pool.toList() }
-        val selected = candidates.randomOrNull() ?: "asset:///wallpapers/Aurora.mp4"
+        val selected = candidates.randomOrNull() ?: WallpaperLibrary.all(context).firstOrNull()?.uri ?: EditionConfig.cyclingVideoUri
         current = selected
         prefs.edit().putString("last", selected).putStringSet("remaining", pool - selected).apply()
         android.util.Log.i("CouchyWallpaper", "Selected $selected")

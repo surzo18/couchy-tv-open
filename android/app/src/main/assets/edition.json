@@ -1,0 +1,35 @@
+{
+  "wallpapers": [
+    {
+      "file": "Aurora.mp4",
+      "title": "Aurora",
+      "collection": "Abstraktné"
+    },
+    {
+      "file": "Ocean.mp4",
+      "title": "Ocean",
+      "collection": "Abstraktné"
+    },
+    {
+      "file": "Ember.mp4",
+      "title": "Ember",
+      "collection": "Abstraktné"
+    }
+  ],
+  "collections": [
+    "Všetky",
+    "Abstraktné",
+    "Príroda",
+    "Filmy",
+    "Hry",
+    "Animácia",
+    "Vlastné"
+  ],
+  "cyclingVideoUri": "asset:///wallpapers/Aurora.mp4",
+  "startupSound": "game-audio/welcome.wav",
+  "startupTitle": "Couchy",
+  "albumActive": "Pictures/Couchy-Album/",
+  "albumHidden": "Pictures/Couchy-Hidden/",
+  "newsSources": [],
+  "premiereSources": []
+}

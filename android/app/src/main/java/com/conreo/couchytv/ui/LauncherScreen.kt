@@ -1,4 +1,8 @@
 package com.conreo.couchytv.ui
+import androidx.lifecycle.repeatOnLifecycle
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withTimeoutOrNull
 
 import com.conreo.couchytv.ui.LocalizedText as Text
 import android.graphics.BitmapFactory
@@ -44,6 +48,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -386,6 +392,23 @@ fun LauncherApp(rescanTick: Int, homeTick: Int = 0, inputTick: Int = 0, sessionW
     val artAllowed = v3Enabled && config.layout == com.conreo.couchytv.data.LAYOUT_CINEMA &&
         !showMore && !showSettings && menuFor == null && favoriteReplacement == null && movePkg == null && !showInputPicker && com.conreo.couchytv.Experience.homePanel.isEmpty()
     androidx.compose.runtime.SideEffect { com.conreo.couchytv.Experience.canReturnToApp = artAllowed }
+    val autoRotate = remember(com.conreo.couchytv.Experience.revision, resumeTick) {
+        com.conreo.couchytv.WallpaperCycle.autoRotate(context)
+    }
+    val advanceWallpaper by rememberUpdatedState(onNextWallpaper)
+    // A single cancellable delay: no periodic polling, background work or extra decoder.
+    // Opening a panel or changing wallpaper restarts the full viewing interval.
+    LaunchedEffect(autoRotate, artAllowed, sessionWallpaper, config.videoUri, config.useVideoWallpaper, config.useBuiltinAerials, lifecycleOwner) {
+        if (autoRotate && artAllowed && config.useVideoWallpaper && !config.useBuiltinAerials && com.conreo.couchytv.EditionConfig.isCyclingUri(config.videoUri)) {
+            lifecycleOwner.lifecycle.repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.RESUMED) {
+                while (isActive) {
+                    delay(com.conreo.couchytv.WallpaperCycle.AUTO_INTERVAL_MS)
+                    val hasChoice = withContext(Dispatchers.IO) { com.conreo.couchytv.WallpaperLibrary.available(context).size > 1 }
+                    if (hasChoice) advanceWallpaper()
+                }
+            }
+        }
+    }
     LaunchedEffect(artAllowed, lastInteraction, idleSeconds, resumeTick) {
         com.conreo.couchytv.Experience.artOnly = false
         if (artAllowed && idleSeconds > 0) {
@@ -430,7 +453,7 @@ fun LauncherApp(rescanTick: Int, homeTick: Int = 0, inputTick: Int = 0, sessionW
         if (movePkg == null) menuFor = app
     }
     val defaultAccent = ACCENTS[config.accent.coerceIn(0, ACCENTS.size - 1)]
-    val accentUri = if (config.videoUri == "asset:///wallpapers/Aurora.mp4" && sessionWallpaper.isNotEmpty()) sessionWallpaper else config.videoUri
+    val accentUri = if (com.conreo.couchytv.EditionConfig.isCyclingUri(config.videoUri) && sessionWallpaper.isNotEmpty()) sessionWallpaper else config.videoUri
     val sampledAccent by produceState(defaultAccent, accentUri, defaultAccent) {
         value = withContext(Dispatchers.IO) {
             Color(com.conreo.couchytv.WallpaperAccent.color(context, accentUri,
@@ -680,7 +703,7 @@ fun LauncherApp(rescanTick: Int, homeTick: Int = 0, inputTick: Int = 0, sessionW
                 )
             } else if (config.useVideoWallpaper && config.videoUri.isNotEmpty()) {
                 VideoWallpaper(
-                    uri = if (config.videoUri == "asset:///wallpapers/Aurora.mp4" && sessionWallpaper.isNotEmpty()) sessionWallpaper else config.videoUri,
+                    uri = if (com.conreo.couchytv.EditionConfig.isCyclingUri(config.videoUri) && sessionWallpaper.isNotEmpty()) sessionWallpaper else config.videoUri,
                     speed = videoSpeed, loop = true, coverBrush = presetBrush,
                 )
             } else if (wallpaperSharp != null) {
@@ -793,7 +816,7 @@ fun LauncherApp(rescanTick: Int, homeTick: Int = 0, inputTick: Int = 0, sessionW
                         onSettingsClick = { showSettings = true },
                         onOriginalClick = { Actions.openOriginalHome(context) },
                         onWallpaperClick = if (v3Enabled) ({ context.startActivity(android.content.Intent(context, com.conreo.couchytv.StudioActivity::class.java)) })
-                            else if (config.useVideoWallpaper && config.videoUri == "asset:///wallpapers/Aurora.mp4") onNextWallpaper else null,
+                            else if (config.useVideoWallpaper && com.conreo.couchytv.EditionConfig.isCyclingUri(config.videoUri)) onNextWallpaper else null,
                         onShuffleClick = onNextWallpaper,
                         onPictureClick = { Actions.openPictureSettings(context) },
                         onSoundClick = { Actions.openSoundSettings(context) },
@@ -915,7 +938,7 @@ fun LauncherApp(rescanTick: Int, homeTick: Int = 0, inputTick: Int = 0, sessionW
                                     Text(
                                         // Quiet uppercase divider, not competing with
                                         // the icons below it.
-                                        text = cat.name.uppercase(),
+                                        text = com.conreo.couchytv.AppLanguage.text(cat.name).uppercase(com.conreo.couchytv.AppLanguage.locale()),
                                         style = MaterialTheme.typography.labelLarge,
                                         color = Color.White.copy(alpha = 0.6f),
                                         letterSpacing = 1.5.sp,
@@ -1342,7 +1365,7 @@ private fun DockArea(
                         Column(Modifier.width(blockWidth)) {
                             if (config.showCategoryNames) {
                                 Text(
-                                    text = cat.name.uppercase(),
+                                    text = com.conreo.couchytv.AppLanguage.text(cat.name).uppercase(com.conreo.couchytv.AppLanguage.locale()),
                                     style = MaterialTheme.typography.labelLarge,
                                     color = Color.White.copy(alpha = 0.6f),
                                     letterSpacing = 1.5.sp,
@@ -1559,7 +1582,6 @@ private fun VideoWallpaper(
     val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
 
     val returnCover by produceState<android.graphics.Bitmap?>(null, uri) {
-        value = null
         value = withContext(Dispatchers.IO) {
             runCatching {
                 val name = android.net.Uri.parse(uri).lastPathSegment.orEmpty()
@@ -1596,13 +1618,13 @@ private fun VideoWallpaper(
             return androidx.media3.exoplayer.ExoPlayer.Builder(context)
                 .setRenderersFactory(renderers)
                 .setMediaSourceFactory(sourceFactory)
-                // A muted, non-interactive wallpaper never seeks, so the default
-                // 50s buffer just pins ~25-30MB of RAM. Trim it — but keep >=15s
-                // max so a slow TV network doesn't rebuffer visibly on the loop.
+                // Bound compressed-video buffering even for high-bitrate UHD files.
+                // Codec output buffers are separate; never prepare two decoders.
                 .setLoadControl(
                     androidx.media3.exoplayer.DefaultLoadControl.Builder()
-                        .setBufferDurationsMs(10_000, 15_000, 2_500, 5_000)
-                        .setPrioritizeTimeOverSizeThresholds(true)
+                        .setBufferDurationsMs(2_500, 8_000, 500, 1_000)
+                        .setTargetBufferBytes(12 * 1024 * 1024)
+                        .setPrioritizeTimeOverSizeThresholds(false)
                         .build()
                 )
                 .build().apply {
@@ -1612,6 +1634,9 @@ private fun VideoWallpaper(
                     repeatMode = if (loop) androidx.media3.common.Player.REPEAT_MODE_ONE
                         else androidx.media3.common.Player.REPEAT_MODE_OFF
                     volume = 0f
+                    trackSelectionParameters = trackSelectionParameters.buildUpon()
+                        .setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_AUDIO, true)
+                        .setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_TEXT, true).build()
                     videoScalingMode =
                         androidx.media3.common.C.VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING
                     playWhenReady = true
@@ -1698,23 +1723,25 @@ private fun VideoWallpaper(
             p.setMediaItem(androidx.media3.common.MediaItem.fromUri(uri))
             p.prepare()
         }
-        // Stall watchdog: if no frame has rendered in 2.5s (a dead/unreachable
-        // stream), skip to the next clip instead of sitting on the cover. Cancelled
-        // automatically when the uri (or player) changes.
-        delay(2_500L)
+        // One coroutine owns both fade phases. It cannot race a previous fade-in
+        // when the user changes wallpaper rapidly. A frame signal also handles
+        // fast local decodes without imposing a fixed waiting period.
+        val ready = withTimeoutOrNull(5_000L) {
+            snapshotFlow { firstFrameGen }.first { it > genBefore }
+        } != null
+        if (ready) {
+            alpha.animateTo(1f, tween(900))
+            return@LaunchedEffect
+        }
         // Only a real stall counts. While the app isn't RESUMED the SurfaceView may
         // have no surface, so NO clip can render — tripping here would falsely flag
         // an error and drop to the gradient. Skip unless resumed.
         val resumed = lifecycleOwner.lifecycle.currentState
             .isAtLeast(androidx.lifecycle.Lifecycle.State.RESUMED)
-        if (firstFrameGen == genBefore && resumed) {
-            android.util.Log.w("LiteTV", "wallpaper stalled (no frame in 2.5s), skipping: $uri")
+        if (resumed) {
+            android.util.Log.w("LiteTV", "wallpaper stalled (no frame in 5s), skipping: $uri")
             if (retryCount < 2) retryCount++ else onError()
         }
-    }
-    // The new clip's first frame is on screen → fade it in slowly.
-    LaunchedEffect(firstFrameGen) {
-        if (firstFrameGen > 0) alpha.animateTo(1f, tween(1100))
     }
     // SurfaceView, NOT TextureView: it's composited by the system (SurfaceFlinger)
     // on its own thread, so the video never stutters when the UI thread is busy
@@ -1730,7 +1757,12 @@ private fun VideoWallpaper(
             // Bind the surface to whichever player is current. Re-runs when the
             // player is rebuilt on return (the old, released one needs no cleanup);
             // a no-op when it's null after release.
-            update = { view -> player?.setVideoSurfaceView(view) },
+            update = { view ->
+                if (view.tag !== player) {
+                    player?.setVideoSurfaceView(view)
+                    view.tag = player
+                }
+            },
         )
         Box(Modifier.fillMaxSize().graphicsLayer { this.alpha = 1f - alpha.value }) {
             val cover = returnCover

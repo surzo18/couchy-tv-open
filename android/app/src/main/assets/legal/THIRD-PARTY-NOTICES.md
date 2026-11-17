@@ -47,6 +47,13 @@ OkHttp and Okio: Copyright Square, Inc. and contributors; Apache-2.0.
 https://github.com/square/okhttp
 https://github.com/square/okio
 
+Guava and failureaccess: Copyright Google LLC; Apache-2.0.
+https://github.com/google/guava
+Error Prone annotations: Copyright Google LLC; Apache-2.0.
+https://github.com/google/error-prone
+JSpecify annotations: Copyright the JSpecify Authors; Apache-2.0.
+https://github.com/jspecify/jspecify
+
 Gradle wrapper/build tooling: Copyright Gradle, Inc. and contributors;
 Apache-2.0. https://github.com/gradle/gradle
 
@@ -63,3 +70,11 @@ Open-Meteo data: CC BY 4.0, with separate API service conditions.
 User-configured feeds and imported files retain their respective rights.
 See SERVICES.md. The GPL on the application does not relicense third-party
 content, marks, fonts or artwork.
+
+## Installed applications shown in screenshots
+
+YouTube, YouTube Music, Google Play and Jellyfin names/icons identify actual
+applications installed on the emulator used for the gallery. Their trademarks
+and artwork belong to their respective owners. No third-party application APKs
+or separately extracted brand assets are distributed with Couchy TV Open.
+The screenshots demonstrate launcher interoperability, not affiliation or endorsement.

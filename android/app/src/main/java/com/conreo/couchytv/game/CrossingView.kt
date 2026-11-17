@@ -83,7 +83,7 @@ class CrossingView(context: Context, val game: CrossingGame, val pause: () -> Un
         if(r>0) c.drawRoundRect(rect,r,r,paint) else c.drawRect(rect,paint)
     }
     private fun text(c: Canvas,s: String,x: Float,y: Float,size: Float,color: Int=0xFFF4F7F2.toInt(),heavy: Boolean=false) {
-        paint.color=color; paint.textSize=size;paint.typeface=if(heavy)bold else normal;c.drawText(s,x,y,paint)
+        paint.color=color; paint.textSize=size;paint.typeface=if(heavy)bold else normal;c.drawText(com.conreo.couchytv.AppLanguage.text(s),x,y,paint)
     }
     override fun onDraw(real: Canvas) {
         super.onDraw(real)

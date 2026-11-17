@@ -9,7 +9,7 @@ data class Premiere(val title:String,val date:String,val provider:String,val ima
     val description:String,val url:String,val source:String,val category:String,val trailer:String="",val rating:String="")
 
 /** Documented TVmaze API only. Data: CC BY-SA; no publisher HTML scraping. */
-object Premieres {
+object ApiPremieres {
     private val gate=kotlinx.coroutines.sync.Mutex()
     private var cached=emptyList<Premiere>()
     private var fetched=0L

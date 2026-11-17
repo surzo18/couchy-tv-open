@@ -36,7 +36,7 @@ private fun Poster(url: String, modifier: Modifier) {
         value = withContext(Dispatchers.IO) {
             posterCache.get(url) ?: runCatching {
                 val uri = java.net.URI(url)
-                require(uri.scheme == "https" && uri.host in setOf("static.tvmaze.com"))
+                require(uri.scheme == "https" && uri.host in setOf("static.tvmaze.com","www.itafilm.sk","itafilm.sk","www.cine-max.sk","cine-max.sk"))
                 val connection = uri.toURL().openConnection() as java.net.HttpURLConnection
                 connection.instanceFollowRedirects = false; connection.connectTimeout = 6000; connection.readTimeout = 6000
                 try {
@@ -107,9 +107,11 @@ fun PremieresPanel() {
                 PanelButton("Späť na prehľad") { selected = null }
             }
         }
-    } else PanelShell("Nové série · TVmaze") {
+    } else PanelShell("Novinky") {
+        PanelButton("Zdroje noviniek") { com.conreo.couchytv.PremiereSources.show(context as android.app.Activity){retry++} }
+        if(com.conreo.couchytv.PremiereSources.selected().isEmpty())Text("Žiadny zdroj nie je zapnutý.")
         PanelButton("TVmaze · zdroj a licencia") { openWeb(context, "https://www.tvmaze.com/api#licensing") }
-        Text(if (loading && rows.isNotEmpty()) "Načítavam nové série…" else "TVmaze · CC BY-SA 4.0 · Začiatky sérií v americkom programe, posledné a nasledujúce 3 dni.", style = MaterialTheme.typography.labelMedium, color = Color(0xFFAEB8C7))
+        Text(if (loading && rows.isNotEmpty()) "Načítavam nové série…" else "Najprv nedávne premiéry, potom pripravované tituly. Dostupnosť závisí od vybraných zdrojov.", style = MaterialTheme.typography.labelMedium, color = Color(0xFFAEB8C7))
         if (loading && rows.isEmpty()) Text("Načítavam aktuálny prehľad…", Modifier.padding(vertical = 30.dp))
         if (error.isNotEmpty()) { Text(error); PanelButton("Skúsiť znova") { retry++ } }
         val firstFocus = remember { androidx.compose.ui.focus.FocusRequester() }

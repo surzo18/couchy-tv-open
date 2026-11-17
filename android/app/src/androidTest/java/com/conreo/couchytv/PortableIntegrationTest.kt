@@ -34,7 +34,7 @@ class PortableIntegrationTest {
     }
     @Test fun testNoPersonalPhotoNotesBundled(){assertEquals(0,JSONObject(instrumentation.targetContext.assets.open("photo-notes.json").bufferedReader().use{it.readText()}).length())}
     @Test fun testNoDefaultJellyfinServer(){assertEquals("",JellyfinLink.server(instrumentation.targetContext))}
-    @Test fun publicEditionHasNoPublisherDefaults() {
+    @Test fun clearingSourcesDoesNotRestoreEditionPresets() {
         NewsSources.load(instrumentation.targetContext)
         val original=NewsSources.all
         try{NewsSources.reset();assertTrue(NewsSources.all.isEmpty())}finally{original.forEach{NewsSources.save(it)}}
@@ -47,12 +47,43 @@ class PortableIntegrationTest {
         assertTrue(items[0].source.contains("CC BY-SA"));assertTrue(items[0].rating.contains("8"))
         assertTrue(Premieres.parseSchedule("[]").isEmpty())
     }
-    @Test fun publicMediaAndLegalNoticesArePackaged() {
+    @Test fun editionMediaAndLegalNoticesArePackaged() {
         val c=instrumentation.targetContext
-        assertEquals(setOf("Aurora.mp4","Ocean.mp4","Ember.mp4"),c.assets.list("wallpapers")!!.toSet())
+        assertEquals(EditionConfig.wallpapers.map{it.first}.toSet(),c.assets.list("wallpapers")!!.toSet())
         for(name in listOf("PRIVACY.md","THIRD-PARTY-NOTICES.md","CC-BY-4.0.txt","OFL-Cookie.txt","GPL-3.0.txt"))
             assertTrue(c.assets.open("legal/$name").use{it.readBytes().size}>100)
-        assertEquals(3,WallpaperLibrary.all(c).count{it.builtIn})
+        assertEquals(EditionConfig.wallpapers.size,WallpaperLibrary.all(c).count{it.builtIn})
+    }
+    @Test fun packagedGameSoundsContainAudioRatherThanLfsPointers() {
+        val assets=instrumentation.targetContext.assets
+        val names=assets.list("game-audio")!!.filter{it.endsWith(".wav")}
+        assertTrue(names.size>=18)
+        names.forEach { name ->
+            val header=ByteArray(12)
+            assets.open("game-audio/$name").use { assertEquals(name,12,it.read(header)) }
+            assertEquals(name,"RIFF",String(header,0,4,Charsets.US_ASCII))
+            assertEquals(name,"WAVE",String(header,8,4,Charsets.US_ASCII))
+        }
+    }
+    @Test fun translatedCountsWorkOnAndroid() {
+        val c=instrumentation.targetContext;val original=AppLanguage.code
+        try { AppLanguage.set(c,"en");assertEquals("12 tracks",AppLanguage.text("12 skladieb")) }
+        finally {AppLanguage.set(c,original)}
+    }
+    @Test fun optionalPremiereSelectionPersists() {
+        val c=instrumentation.targetContext;PremiereSources.load(c);val original=PremiereSources.selected()
+        try {PremiereSources.save(setOf("tvmaze","cinema"));PremiereSources.load(c);assertEquals(setOf("tvmaze","cinema"),PremiereSources.selected());PremiereSources.save(emptySet());assertTrue(PremiereSources.selected().isEmpty())}
+        finally {PremiereSources.save(original)}
+    }
+    @Test fun wallpaperRotationDefaultsOnAndPersistsOptOut() {
+        val c=instrumentation.targetContext;val p=c.getSharedPreferences("wallpaper_cycle",0)
+        val existed=p.contains("autoRotate");val original=WallpaperCycle.autoRotate(c)
+        try {
+            p.edit().remove("autoRotate").commit();assertTrue(WallpaperCycle.autoRotate(c))
+            assertEquals(120_000L,WallpaperCycle.AUTO_INTERVAL_MS)
+            WallpaperCycle.setAutoRotate(c,false);assertFalse(WallpaperCycle.autoRotate(c))
+            WallpaperCycle.setAutoRotate(c,true);assertTrue(WallpaperCycle.autoRotate(c))
+        } finally { if(existed)p.edit().putBoolean("autoRotate",original).commit() else p.edit().remove("autoRotate").commit() }
     }
     @Test fun testMusicImportValidationAndDeletion() {
         val c=instrumentation.targetContext
