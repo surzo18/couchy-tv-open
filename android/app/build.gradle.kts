@@ -90,7 +90,7 @@ dependencies {
     implementation("androidx.annotation:annotation:1.8.2")
     implementation("androidx.activity:activity-compose:1.9.2")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.6")
-    implementation("androidx.datastore:datastore-preferences:1.1.1")
+    implementation("androidx.datastore:datastore-preferences:1.3.0")
     // Applies the bundled baseline profile (src/main/baseline-prof.txt) so the
     // startup + scroll paths are AOT-compiled on first run instead of JIT'd —
     // the big cold-start "screen shows but not smooth yet" win.
