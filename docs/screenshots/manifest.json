@@ -31,18 +31,18 @@
   },
   {
     "path": "docs/screenshots/home-aurora.png",
-    "sha256": "01421acd6aabf8aa0011279d3ebfb9d1cd277b804cbc6d1defdba0436fcb5d99",
-    "origin": "Public-edition emulator capture: original demo media; installed application icons identify their respective apps, which are not bundled."
+    "sha256": "47469b97e207721fd2d58c1ff7aa3dd6a417b4148beb8803cf96fe3abdf7bf2e",
+    "origin": "Unedited public-edition emulator capture: seven installed apps; opt-in NASA RSS and Paris weather; original Aurora artwork in a demo album; original synthesized audio titled Some song. No personal media or accounts. Apps/demo media and source presets are not bundled."
   },
   {
     "path": "docs/screenshots/home-ember.png",
-    "sha256": "19241cd73c8ca01297f52835b418faca0fbd89d94d8354e5e7331075df910821",
-    "origin": "Public-edition emulator capture: original demo media; installed application icons identify their respective apps, which are not bundled."
+    "sha256": "225ce52c92ad1e5f25ee98d4e8da49218d57492e48530808b67d52032f8fa240",
+    "origin": "Unedited public-edition emulator capture: seven installed apps; opt-in NASA RSS and Paris weather; original Aurora artwork in a demo album; original synthesized audio titled Some song. No personal media or accounts. Apps/demo media and source presets are not bundled."
   },
   {
     "path": "docs/screenshots/home-ocean.png",
-    "sha256": "4a821ff4817698c0619f29e921da8f88cdc59e397e1abb37d04be47f405bd1be",
-    "origin": "Public-edition emulator capture: original demo media; installed application icons identify their respective apps, which are not bundled."
+    "sha256": "afe65fa4d03227eafa4f421988749293f5d748feb0c7decf613b8ab62582e4aa",
+    "origin": "Unedited public-edition emulator capture: seven installed apps; opt-in NASA RSS and Paris weather; original Aurora artwork in a demo album; original synthesized audio titled Some song. No personal media or accounts. Apps/demo media and source presets are not bundled."
   },
   {
     "path": "docs/screenshots/jellyfin.png",

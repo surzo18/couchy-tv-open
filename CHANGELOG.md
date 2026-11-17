@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.1
+
+- Translate the home memory card and now-playing notification in English.
+- Expanded gallery with seven installed apps, optional news/weather, and original demo album/audio.
+
 ## 1.2.0
 
 - Optional two-minute wallpaper rotation, enabled by default; lifecycle-aware timer and single-decoder transitions.

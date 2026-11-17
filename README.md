@@ -6,6 +6,8 @@ This independently maintained edition builds on [Couchy Launcher](https://github
 
 ![Couchy TV Open home with an original abstract background](docs/screenshots/home-aurora.png)
 
+*Example setup: seven installed apps, optional news and weather, a memory card, and Now playing. [Screenshot details](docs/GALLERY.md).*
+
 [Download](https://github.com/surzo18/couchy-tv-open/releases/latest) · [User guide](docs/USER-GUIDE.md) · [Feature reference](docs/FEATURES.md) · [Build and tests](docs/TESTING.md) · [Licenses](LICENSING.md)
 
 ## What you can do
