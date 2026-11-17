@@ -83,7 +83,7 @@ dependencies {
     implementation("androidx.tv:tv-material:1.0.0")
     // iOS-style continuous (squircle) corners — perceptually smoother than the
     // circular-arc RoundedCornerShape.
-    implementation("androidx.graphics:graphics-shapes:1.0.1")
+    implementation("androidx.graphics:graphics-shapes:1.1.0")
 
     implementation("androidx.core:core-ktx:1.13.1")
     implementation("androidx.annotation:annotation:1.8.2")
