@@ -29,4 +29,4 @@ jobs:
           build-mode: manual
       - run: bash gradlew :app:assembleDebug --no-daemon
         working-directory: android
-      - uses: github/codeql-action/analyze@b7b84b636b4f90c9b31da1bc5f72bfadd5b31410
+      - uses: github/codeql-action/analyze@9418214df1f2c4b8128c770156c409013b07d6b9
