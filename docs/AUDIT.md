@@ -16,7 +16,7 @@ Review updated for 1.2.0 on 17 November 2026. This records engineering checks an
 |---|---|
 | Debug + optimized release build | Passed |
 | JVM regression/policy tests | 24 passed |
-| Android instrumentation | 14 passed on isolated TV emulator |
+| Android instrumentation | 15 passed on isolated TV emulator |
 | First-run setup | 8 pages, language switch, process restart/resume and saved completion passed |
 | Display matrix | 20 screen/resolution cases passed: home, wallpapers, system, music, help across four configurations |
 | Android lint | 0 errors; 98 warnings, including localization and deprecated/platform APIs |

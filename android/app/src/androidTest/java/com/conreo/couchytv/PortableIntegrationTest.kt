@@ -54,6 +54,17 @@ class PortableIntegrationTest {
             assertTrue(c.assets.open("legal/$name").use{it.readBytes().size}>100)
         assertEquals(EditionConfig.wallpapers.size,WallpaperLibrary.all(c).count{it.builtIn})
     }
+    @Test fun packagedGameSoundsContainAudioRatherThanLfsPointers() {
+        val assets=instrumentation.targetContext.assets
+        val names=assets.list("game-audio")!!.filter{it.endsWith(".wav")}
+        assertTrue(names.size>=18)
+        names.forEach { name ->
+            val header=ByteArray(12)
+            assets.open("game-audio/$name").use { assertEquals(name,12,it.read(header)) }
+            assertEquals(name,"RIFF",String(header,0,4,Charsets.US_ASCII))
+            assertEquals(name,"WAVE",String(header,8,4,Charsets.US_ASCII))
+        }
+    }
     @Test fun translatedCountsWorkOnAndroid() {
         val c=instrumentation.targetContext;val original=AppLanguage.code
         try { AppLanguage.set(c,"en");assertEquals("12 tracks",AppLanguage.text("12 skladieb")) }
