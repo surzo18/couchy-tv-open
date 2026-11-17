@@ -23,7 +23,7 @@ jobs:
       - uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407
         with:
           packages: 'platform-tools platforms;android-34 build-tools;34.0.0'
-      - uses: github/codeql-action/init@b7b84b636b4f90c9b31da1bc5f72bfadd5b31410 # v3
+      - uses: github/codeql-action/init@9418214df1f2c4b8128c770156c409013b07d6b9 # v3
         with:
           languages: java-kotlin
           build-mode: manual
